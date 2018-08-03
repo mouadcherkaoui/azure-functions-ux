@@ -28,6 +28,7 @@ import { errorIds } from '../../shared/models/error-ids';
 })
 export class ConsoleComponent extends FeatureComponent<TreeViewInfo<SiteData>> {
     public toggleConsole = true;
+    public directoryInterface = false;
     public consoleIcon = 'image/console.svg';
     public resourceId: string;
     public initialized = false;
@@ -60,6 +61,10 @@ export class ConsoleComponent extends FeatureComponent<TreeViewInfo<SiteData>> {
             });
           this.currentOption = ConsoleTypes.CMD;
         }
+
+      toggleDirectoryInterface() {
+        this.directoryInterface = !this.directoryInterface;
+      }
 
       protected setup(inputEvents: Observable<TreeViewInfo<SiteData>>) {
           // ARM API request to get the site details and the publishing credentials

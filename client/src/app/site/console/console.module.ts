@@ -12,6 +12,7 @@ import { PowershellComponent } from './powershell/powershell.component';
 import { BashComponent } from './bash/bash.component';
 import { SSHComponent } from './ssh/ssh.component';
 import { ConsoleComponent } from './console.component';
+import { DirectoryComponent } from './directory-interface/directory.component';
 
 @NgModule({
     entryComponents: [
@@ -22,7 +23,8 @@ import { ConsoleComponent } from './console.component';
       SSHComponent,
       PromptComponent,
       ErrorComponent,
-      MessageComponent
+      MessageComponent,
+      DirectoryComponent
     ],
     imports: [
       TranslateModule.forChild(), CommonModule, SharedModule
@@ -36,7 +38,8 @@ import { ConsoleComponent } from './console.component';
       PromptComponent,
       ClickOutsideDirective,
       ErrorComponent,
-      MessageComponent
+      MessageComponent,
+      DirectoryComponent
     ],
     providers: [
       ConsoleService
@@ -45,7 +48,8 @@ import { ConsoleComponent } from './console.component';
       CmdComponent,
       PowershellComponent,
       BashComponent,
-      SSHComponent
+      SSHComponent,
+      DirectoryComponent
     ]
   })
 export class ConsoleModule { }

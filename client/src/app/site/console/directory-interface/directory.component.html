@@ -1,0 +1,105 @@
+<div id = "directory-container">
+    <i class= "fa fa-spinner fa-spin fa-fw fa-4x center-loader" *ngIf= "isLoading"></i>
+    <div #dirBody class = "directory-body" [scrollTop]="dirBody.scrollHeight">
+        <table class = "parent-container">
+            <tbody>
+                <tr>
+                    <td class= "directory-info"><strong>{{dir}}</strong></td>
+                    <td align="right">
+                        <i class= "fa fa-arrow-left fa-2x btn" title="Back" (click)= "goBack()"></i>
+                        <i class= "fa fa-home fa-2x btn" title="Home" (click)= "goToHome()"></i>
+                        <i class= "fa fa-folder fa-2x btn" title= "Create Folder" (click)= "createItemVisible = true; newItemType = true"></i>
+                        <i class= "fa fa-file fa-2x btn" title= "Create File" (click)= "createItemVisible = true; newItemType = false"></i>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan ="2">
+                        <div class = "scrollit">
+                            <table class = "list-container">
+                                <thead>
+                                    <tr class= "row-header">
+                                        <th>Action</th>
+                                        <th>Name</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr *ngIf= "currentDirItems.length === 0">
+                                        <td colspan= "2">
+                                            <i>No files/folders in the current directory.</i>
+                                        </td>
+                                    </tr>
+                                    <tr *ngFor= "let item of currentDirItems">
+                                        <td>
+                                            <i class= "fa fa-download fa-lg btn" title="Download" (click)= "downloadItem(item)"></i>
+                                            <i class= "fa fa-trash fa-lg btn" title="Delete" (click)= "deleteItem(item)"></i>
+                                        </td>
+                                        <td (click)= "itemClicked(item)"><a>{{item.name}}</a></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <!--Create New Item Start-->
+        <div class="modal fade in" style="display: block" *ngIf= "createItemVisible" role="dialog">
+            <div class="modal-dialog ">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true" (click)="closeModal()">
+                            &times;
+                        </button>
+                        <h4><b>Create {{ newItemType ? 'Folder' : 'File' }}</b></h4>
+                        <hr>
+                    </div>
+                    <div class="modal-body">
+                        <div class="input-container">
+                            <label>{{ newItemType ? 'Folder' : 'File' }} Name</label>
+                                <input type="text" [(ngModel)]="newItemName" required= "required"/>
+                        </div>
+                    </div>
+                    <div class= "modal-footer">
+                        <div class="button-conainer">
+                            <button class="custom-button"
+                                    (click)="createNewItem()">
+                                Create
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--Modal End-->
+
+        <!--View File Start-->
+        <div class="modal fade in" style="display: block" *ngIf= "fileContentVisible" role="dialog">
+                <div class="modal-dialog ">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true" (click)="closeFileModal()">
+                                &times;
+                            </button>
+                            <h4><b>File Contents: {{ selectedFile.name }}</b></h4>
+                            <hr>
+                        </div>
+                        <div class="modal-body">
+                            <p>
+                                {{ selectedFile.content }}
+                            </p>
+                        </div>
+                        <div class= "modal-footer">
+                            <div class="button-conainer">
+                                <button class="custom-button"
+                                        (click)="closeFileModal()">
+                                        Close
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-backdrop fade in" *ngIf= "fileContentVisible || createItemVisible"></div>
+            <!--Modal End-->
+    </div>
+</div>
