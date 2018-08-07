@@ -333,6 +333,7 @@ export class KeyCodes {
     public static readonly leftWindow = 91;
     public static readonly select = 93;
     public static readonly c = 67;
+    public static readonly m = 77;
     public static readonly v = 86;
 }
 
@@ -452,11 +453,15 @@ export class WorkerRuntimeLanguages {
 export class ConsoleConstants {
     public static readonly newLines = '\n\n';
     public static readonly singleBackslash = '\\';
+    public static readonly singleForwardSlash = '/';
     public static readonly currentDirectory = '.';
     public static readonly previousDirectory = '..';
     public static readonly successExitcode = 0;
     public static readonly whitespace = ' ';
     public static readonly newLine = '\n';
+    public static readonly windowsNewLine = '\r\n';
+    public static readonly linuxDefaultDir = '/home/site/wwwroot/';
+    public static readonly windowsDefaultDir = 'D:/home/site/wwwroot/';
 
     // commands
     public static readonly exit = 'exit';
