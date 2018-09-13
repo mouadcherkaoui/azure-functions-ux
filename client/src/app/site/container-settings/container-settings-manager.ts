@@ -12,15 +12,15 @@ import {
     ContainerType,
     ContainerFormData,
     ContainerSiteConfigFormData,
-    ContainerAppSettingsFormData } from './container-settings';
+    ContainerAppSettingsFormData
+} from './container-settings';
 import { TranslateService } from '@ngx-translate/core';
 import { PortalResources } from '../../shared/models/portal-resources';
 import { SelectOption } from '../../shared/models/select-option';
 import { ApplicationSettings } from '../../shared/models/arm/application-settings';
 import { SiteConfig } from '../../shared/models/arm/site-config';
 import { ContainerConstants } from '../../shared/models/constants';
-import { FormGroup, FormBuilder } from '@angular/forms';
-import { RequiredValidator } from '../../shared/validators/requiredValidator';
+import { FormGroup, FormBuilder, FormControl, ValidationErrors } from '@angular/forms';
 import { Url } from '../../shared/Utilities/url';
 import { PublishingCredentials } from '../../shared/models/publishing-credentials';
 
@@ -34,10 +34,19 @@ export class ContainerSettingsManager {
 
     form: FormGroup;
 
+    private _requiredValidatorFn: (control: FormControl) => ValidationErrors | null;
+
     constructor(
         private _injector: Injector,
         private _ts: TranslateService,
         private _fb: FormBuilder) {
+
+        const requiredError = this._ts.instant(PortalResources.validation_requiredError);
+        this._requiredValidatorFn = (control: FormControl) => {
+            return !!control && (control.touched || control.dirty) && !control.value
+                ? { "required": requiredError }
+                : null;
+        };
     }
 
     get containerFormData(): ContainerFormData {
@@ -358,21 +367,21 @@ export class ContainerSettingsManager {
 
     private _getQuickstartForm(): FormGroup {
         return this._fb.group({
-            config: ['', new RequiredValidator(this._ts)],
+            config: ['', this._requiredValidatorFn],
         });
     }
 
     private _getAcrForm(containerType: ContainerType, fxVersion: string, appSettings: ApplicationSettings, siteConfig: SiteConfig): FormGroup {
         if (containerType === 'single') {
             return this._fb.group({
-                registry: [this._getAcrRegistry(fxVersion, appSettings, siteConfig), new RequiredValidator(this._ts)],
-                repository: [this._getAcrRepository(fxVersion, appSettings, siteConfig), new RequiredValidator(this._ts)],
-                tag: [this._getAcrTag(fxVersion, appSettings, siteConfig), new RequiredValidator(this._ts)],
+                registry: [this._getAcrRegistry(fxVersion, appSettings, siteConfig), this._requiredValidatorFn],
+                repository: [this._getAcrRepository(fxVersion, appSettings, siteConfig), this._requiredValidatorFn],
+                tag: [this._getAcrTag(fxVersion, appSettings, siteConfig), this._requiredValidatorFn],
                 startupFile: [this._getSiteConfigAppCommandLine(siteConfig), []],
             });
         } else {
             return this._fb.group({
-                registry: [this._getAcrRegistry(fxVersion, appSettings, siteConfig), new RequiredValidator(this._ts)],
+                registry: [this._getAcrRegistry(fxVersion, appSettings, siteConfig), this._requiredValidatorFn],
                 config: [this._getAcrConfig(fxVersion, appSettings, siteConfig), []],
             });
         }
@@ -451,11 +460,11 @@ export class ContainerSettingsManager {
     private _getDockerHubPublicForm(containerType: ContainerType, fxVersion: string, appSettings: ApplicationSettings, siteConfig: SiteConfig): FormGroup {
         if (containerType === 'single') {
             return this._fb.group({
-                image: [fxVersion ? fxVersion.split('|')[1] : '', new RequiredValidator(this._ts)],
+                image: [fxVersion ? fxVersion.split('|')[1] : '', this._requiredValidatorFn],
             });
         } else {
             return this._fb.group({
-                config: [this._getConfigFromFxVersion(fxVersion), new RequiredValidator(this._ts)],
+                config: [this._getConfigFromFxVersion(fxVersion), this._requiredValidatorFn],
             });
         }
     }
@@ -463,15 +472,15 @@ export class ContainerSettingsManager {
     private _getDockerHubPrivateForm(containerType: ContainerType, fxVersion: string, appSettings: ApplicationSettings, siteConfig: SiteConfig): FormGroup {
         if (containerType === 'single') {
             return this._fb.group({
-                login: [this._getAppSettingsUsername(appSettings), new RequiredValidator(this._ts)],
-                password: [this._getAppSettingsPassword(appSettings), new RequiredValidator(this._ts)],
-                image: [fxVersion ? fxVersion.split('|')[1] : '', new RequiredValidator(this._ts)],
+                login: [this._getAppSettingsUsername(appSettings), this._requiredValidatorFn],
+                password: [this._getAppSettingsPassword(appSettings), this._requiredValidatorFn],
+                image: [fxVersion ? fxVersion.split('|')[1] : '', this._requiredValidatorFn],
             });
         } else {
             return this._fb.group({
-                login: [this._getAppSettingsUsername(appSettings), new RequiredValidator(this._ts)],
-                password: [this._getAppSettingsPassword(appSettings), new RequiredValidator(this._ts)],
-                config: [this._getConfigFromFxVersion(fxVersion), new RequiredValidator(this._ts)],
+                login: [this._getAppSettingsUsername(appSettings), this._requiredValidatorFn],
+                password: [this._getAppSettingsPassword(appSettings), this._requiredValidatorFn],
+                config: [this._getConfigFromFxVersion(fxVersion), this._requiredValidatorFn],
             });
         }
     }
@@ -479,18 +488,18 @@ export class ContainerSettingsManager {
     private _getPrivateRegistryForm(containerType: ContainerType, fxVersion: string, appSettings: ApplicationSettings, siteConfig: SiteConfig): FormGroup {
         if (containerType === 'single') {
             return this._fb.group({
-                serverUrl: [this._getAppSettingServerUrl(appSettings), new RequiredValidator(this._ts)],
-                login: [this._getAppSettingsUsername(appSettings), new RequiredValidator(this._ts)],
-                password: [this._getAppSettingsPassword(appSettings), new RequiredValidator(this._ts)],
-                image: [fxVersion ? fxVersion.split('|')[1] : '', new RequiredValidator(this._ts)],
-                startupFile: [this._getSiteConfigAppCommandLine(siteConfig), new RequiredValidator(this._ts)],
+                serverUrl: [this._getAppSettingServerUrl(appSettings), this._requiredValidatorFn],
+                login: [this._getAppSettingsUsername(appSettings), this._requiredValidatorFn],
+                password: [this._getAppSettingsPassword(appSettings), this._requiredValidatorFn],
+                image: [fxVersion ? fxVersion.split('|')[1] : '', this._requiredValidatorFn],
+                startupFile: [this._getSiteConfigAppCommandLine(siteConfig), this._requiredValidatorFn],
             });
         } else {
             return this._fb.group({
-                serverUrl: [this._getAppSettingServerUrl(appSettings), new RequiredValidator(this._ts)],
-                login: [this._getAppSettingsUsername(appSettings), new RequiredValidator(this._ts)],
-                password: [this._getAppSettingsPassword(appSettings), new RequiredValidator(this._ts)],
-                config: [this._getConfigFromFxVersion(fxVersion), new RequiredValidator(this._ts)],
+                serverUrl: [this._getAppSettingServerUrl(appSettings), this._requiredValidatorFn],
+                login: [this._getAppSettingsUsername(appSettings), this._requiredValidatorFn],
+                password: [this._getAppSettingsPassword(appSettings), this._requiredValidatorFn],
+                config: [this._getConfigFromFxVersion(fxVersion), this._requiredValidatorFn],
             });
         }
     }

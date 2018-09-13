@@ -12,7 +12,7 @@ import { ArmObj } from '../../shared/models/arm/arm-obj';
 import { ApplicationSettings } from '../../shared/models/arm/application-settings';
 import { SiteConfig } from '../../shared/models/arm/site-config';
 import { PublishingCredentials } from '../../shared/models/publishing-credentials';
-import { FormGroup } from '@angular/forms';
+import { FormGroup, FormControl } from '@angular/forms';
 
 @Component({
     selector: 'container-settings',
@@ -127,6 +127,7 @@ export class ContainerSettingsComponent extends FeatureComponent<TreeViewInfo<Co
     public clickApply() {
         // return portal service pcv3 form data
         // subscribe to form status changes and validate the specific form.
+        this._markFormGroupTouchedAndValidate(this.form);
         const data = this.containerSettingsManager.containerFormData;
         console.log(data);
     }
@@ -158,6 +159,23 @@ export class ContainerSettingsComponent extends FeatureComponent<TreeViewInfo<Co
             Dom.setFocus(tab);
         } else {
             Dom.clearFocus(tab);
+        }
+    }
+
+    private _markFormGroupTouchedAndValidate(formGroup: FormGroup) {
+        if (formGroup.controls) {
+            const keys = Object.keys(formGroup.controls);
+            for (let i = 0; i < keys.length; i++) {
+                const control = formGroup.controls[keys[i]];
+                if (control.enabled) {
+                    if (control instanceof FormControl) {
+                        control.markAsTouched();
+                        control.updateValueAndValidity();
+                    } else if (control instanceof FormGroup) {
+                        this._markFormGroupTouchedAndValidate(control);
+                    }
+                }
+            }
         }
     }
 }
