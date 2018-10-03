@@ -16,6 +16,7 @@ import { PriceSpecInput, PriceSpec } from './price-spec';
 import { Subject } from 'rxjs/Subject';
 import { BillingMeter } from '../../../shared/models/arm/billingMeter';
 import { LogCategories } from '../../../shared/models/constants';
+import { AppKind } from '../../../shared/Utilities/app-kind';
 
 export interface SpecPickerInput<T> {
     id: ResourceId;
@@ -355,14 +356,16 @@ export class PlanPriceSpecManager {
     }
 
     private _getBillingMeters(inputs: SpecPickerInput<NewPlanSpecPickerData>) {
-        if (!inputs.data) {
 
+        if (!inputs.data) {
             // If we're getting meters for an existing plan
-            return this._planService.getBillingMeters(this._subscriptionId, this._plan.location);
+            const osType = AppKind.hasKinds(this._plan, ['linux']) ? 'linux' : 'windows';
+            return this._planService.getBillingMeters(this._subscriptionId, osType, this._plan.location);
         }
 
         // We're getting meters for a new plan
-        return this._planService.getBillingMeters(inputs.data.subscriptionId, inputs.data.location);
+        const osType = inputs.data.isLinux ? 'linux' : 'windows';
+        return this._planService.getBillingMeters(inputs.data.subscriptionId, osType, inputs.data.location);
     }
 
     private _setBillingResourceId(spec: PriceSpec, billingMeters: ArmObj<BillingMeter>[]) {
@@ -374,7 +377,8 @@ export class PlanPriceSpecManager {
             throw Error('Spec must contain a specResourceSet with one firstParty item defined');
         }
 
-        const billingMeter = billingMeters.find(m => m.properties.friendlyName === spec.meterFriendlyName);
+        // const billingMeter = billingMeters.find(m => m.properties.friendlyName === spec.meterFriendlyName);
+        const billingMeter = billingMeters.find(m => m.properties.shortName === spec.skuCode);
 
         if (!billingMeter) {
             this._logService.error(LogCategories.specPicker, '/meter-not-found', `No meter found for ${spec.meterFriendlyName}`);
