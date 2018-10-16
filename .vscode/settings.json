@@ -4,5 +4,6 @@
     "prettier.singleQuote": true,
     "prettier.tabWidth": 2,
     "prettier.trailingComma": "es5",
-    "editor.formatOnSave": true
+    "prettier.ignorePath": ".prettierignore",
+    //"editor.formatOnSave": true
 }

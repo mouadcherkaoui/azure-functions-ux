@@ -14,6 +14,7 @@ import { TranslateService } from '@ngx-translate/core';
     styleUrls: ['./configure-bitbucket.component.scss', '../step-configure.component.scss', '../../deployment-center-setup.component.scss'],
 })
 export class ConfigureBitbucketComponent implements OnDestroy {
+    public OrgList: DropDownElement<string>[] = [];
     public RepoList: DropDownElement<string>[] = [];
     public BranchList: DropDownElement<string>[] = [];
 
@@ -21,12 +22,13 @@ export class ConfigureBitbucketComponent implements OnDestroy {
     private _ngUnsubscribe$ = new Subject();
     private repoUrlToNameMap: { [key: string]: string } = {};
 
+    selectedOrg = null;
     selectedRepo = null;
     selectedBranch = null;
 
     public reposLoading = false;
     public branchesLoading = false;
-
+    public orgsLoading = false;
     constructor(
         public wizard: DeploymentCenterStateManager,
         private _cacheService: CacheService,
@@ -36,14 +38,14 @@ export class ConfigureBitbucketComponent implements OnDestroy {
         this.reposStream$.takeUntil(this._ngUnsubscribe$).subscribe(r => {
             this.fetchBranches(r);
         });
-        this.fetchRepos();
+        this.fetchOrgs();
         this.updateFormValidation();
 
         // if auth changes then this will force refresh the config data
         this.wizard.updateSourceProviderConfig$
             .takeUntil(this._ngUnsubscribe$)
             .subscribe(r => {
-                this.fetchRepos();
+                this.fetchOrgs();
             });
     }
 
@@ -53,6 +55,34 @@ export class ConfigureBitbucketComponent implements OnDestroy {
         this.wizard.sourceSettings.get('branch').setValidators(required.validate.bind(required));
         this.wizard.sourceSettings.get('repoUrl').updateValueAndValidity();
         this.wizard.sourceSettings.get('branch').updateValueAndValidity();
+    }
+
+    fetchOrgs() {
+        this.OrgList = [];
+        this.orgsLoading = true;
+        this._cacheService
+            .post(Constants.serviceHost + `api/bitbucket/passthrough?repo=`, true, null, {
+                url: `${DeploymentCenterConstants.bitbucketApiUrl}/teams?role=admin`,
+                authToken: this.wizard.getToken(),
+            })
+            .subscribe(
+                r => {
+                    this.orgsLoading = false;
+                    const newOrgList: DropDownElement<string>[] = [];
+                    r.json().values.forEach(org => {
+                        newOrgList.push({
+                            displayLabel: org.username,
+                            value: org.username,
+                        });
+                    });
+
+                    this.OrgList = newOrgList;
+                },
+                err => {
+                    this.orgsLoading = false;
+                    this._logService.error(LogCategories.cicd, '/fetch-bitbucket-repos', err);
+                },
+            );
     }
 
     fetchRepos() {
@@ -119,6 +149,9 @@ export class ConfigureBitbucketComponent implements OnDestroy {
         this.reposStream$.next(this.repoUrlToNameMap[repo.value]);
     }
 
+    OrgChanged(org: DropDownElement<string>) {
+        console.log(org.value);
+    }
     ngOnDestroy(): void {
         this._ngUnsubscribe$.next();
     }
