@@ -788,6 +788,10 @@ export class FunctionAppService {
   }
 
   isSlot(context: FunctionAppContext | string): boolean {
+    return !!this.getSlotName(context);
+  }
+
+  getSlotName(context: FunctionAppContext | string): string {
     // slots id looks like
     // /subscriptions/<subscriptionId>/resourceGroups/<resourceGroupName>/providers/Microsoft.Web/sites/<siteName>/slots/<slotName>
     // split('/')
@@ -806,7 +810,7 @@ export class FunctionAppService {
     //  ]
     const id = typeof context === 'string' ? context : context.site.id;
     const siteSegments = id.split('/');
-    return siteSegments.length === 11 && siteSegments[9].toLowerCase() === 'slots';
+    return siteSegments.length === 11 && siteSegments[9].toLowerCase() === 'slots' ? siteSegments[10] : null;
   }
 
   getSlotsList(context: FunctionAppContext | string): Result<ArmObj<Site>[]> {
