@@ -39,6 +39,8 @@ import { FunctionAppService } from 'app/shared/services/function-app.service';
 import { FeatureComponent } from 'app/shared/components/feature-component';
 import { errorIds } from '../../shared/models/error-ids';
 import { TopBarNotification } from 'app/top-bar/top-bar-models';
+import { OpenBladeInfo, BroadcastMessageId } from '../../shared/models/portal';
+import { SwapInfo } from '../slots/swap-slots/swap-slots.component';
 
 @Component({
   selector: 'site-summary',
@@ -67,11 +69,13 @@ export class SiteSummaryComponent extends FeatureComponent<TreeViewInfo<SiteData
   public showDownloadFunctionAppModal = false;
   public showQuickstart = false;
   public notifications: TopBarNotification[];
+  public swapControlsOpen = false;
 
   private _viewInfo: TreeViewInfo<SiteData>;
   private _subs: Subscription[];
   private _blobUrl: string;
   private _isSlot: boolean;
+  private _slotName: string;
   private readonly _oldExtensionList = [
     'EventHubConfiguration',
     'CosmosDBConfiguration',
@@ -113,6 +117,8 @@ export class SiteSummaryComponent extends FeatureComponent<TreeViewInfo<SiteData
       .subscribe(info => {
         this._subs = info.subscriptions;
       });
+
+    this._setupSwapMessageSubscription();
   }
 
   protected setup(inputEvents: Observable<TreeViewInfo<SiteData>>) {
@@ -148,6 +154,7 @@ export class SiteSummaryComponent extends FeatureComponent<TreeViewInfo<SiteData
         const serverFarm = context.site.properties.serverFarmId.split('/')[8];
         this.plan = `${serverFarm} (${context.site.properties.sku.replace('Dynamic', 'Consumption')})`;
         this._isSlot = this._functionAppService.isSlot(context);
+        this._slotName = this._functionAppService.getSlotName(context) || 'production';
 
         this.clearBusyEarly();
 
@@ -239,6 +246,46 @@ export class SiteSummaryComponent extends FeatureComponent<TreeViewInfo<SiteData
           this.plan = 'Trial';
         }
       });
+  }
+
+  private _setupSwapMessageSubscription() {
+    this._portalService
+      .getBroadcastEvents(BroadcastMessageId.slotSwap)
+      .takeUntil(this.ngUnsubscribe)
+      .filter(m => m.resourceId === this.context.site.id)
+      .subscribe(message => {
+        console.log(JSON.stringify(message));
+        const swapInfo = message.metadata as SwapInfo;
+        switch (swapInfo.operationType) {
+          case 'slotsswap':
+          case 'applySlotConfig':
+            if (swapInfo.state === 'started') {
+              this._setTargetSwapSlot(swapInfo.srcName, swapInfo.destName);
+            } else {
+              this._viewInfo.node.refresh(null, true);
+            }
+            break;
+          case 'resetSlotConfig':
+            if (swapInfo.state === 'started') {
+              if (this.context) {
+                this.context.site.properties.targetSwapSlot = null;
+              }
+            } else {
+              this._viewInfo.node.refresh(null, true);
+            }
+            break;
+        }
+      });
+  }
+
+  private _setTargetSwapSlot(srcSlotName: string, destSlotName: string) {
+    if (this.context) {
+      if (this._slotName.toLowerCase() === srcSlotName.toLowerCase()) {
+        this.context.site.properties.targetSwapSlot = destSlotName;
+      } else if (this._slotName.toLowerCase() === destSlotName.toLowerCase()) {
+        this.context.site.properties.targetSwapSlot = srcSlotName;
+      }
+    }
   }
 
   private get showTryView() {
@@ -529,13 +576,19 @@ export class SiteSummaryComponent extends FeatureComponent<TreeViewInfo<SiteData
   }
 
   openSwapBlade() {
-    this._portalService.openBladeDeprecated(
-      {
-        detailBlade: 'WebsiteSlotsListBlade',
-        detailBladeInputs: { resourceUri: this.context.site.id },
-      },
-      'site-summary'
-    );
+    const bladeInfo: OpenBladeInfo = {
+      detailBlade: 'SwapSlotsFrameBlade',
+      detailBladeInputs: { id: this.context.site.id },
+      openAsContextBlade: true,
+    };
+
+    this.swapControlsOpen = true;
+    this._portalService
+      .openBlade(bladeInfo, 'site-summary')
+      .finally(() => {
+        this.swapControlsOpen = false;
+      })
+      .subscribe();
   }
 
   openDeleteBlade() {

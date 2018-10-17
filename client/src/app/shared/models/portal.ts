@@ -74,6 +74,7 @@ export class Verbs {
   public static returnPCV3Results = 'return-pcv3-results';
 
   public static closeBlades = 'close-blades';
+  public static closeSelf = 'close-self';
   public static logAction = 'log-action';
   public static logMessage = 'log-message';
   public static logTimerEvent = 'log-timer-event';
@@ -107,6 +108,9 @@ export enum LogEntryLevel {
 
 export enum BroadcastMessageId {
   planUpdated = 'PLAN_UPDATED',
+  siteUpdated = 'SITE_UPDATED',
+  slotSwap = 'SLOT_SWAP',
+  slotNew = 'SLOT_NEW',
 }
 
 // Mainly used for Ibiza legacy reasons
@@ -159,9 +163,10 @@ export interface SubscriptionRequest {
   subscriptionId: string;
 }
 
-export interface BroadcastMessage {
+export interface BroadcastMessage<T> {
   id: BroadcastMessageId;
   resourceId: string;
+  metadata: T;
 }
 
 export enum PartSize {
