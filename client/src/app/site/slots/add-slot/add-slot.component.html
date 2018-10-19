@@ -1,5 +1,6 @@
 <div class="wrapper"
-    [is-dirty]="addForm?.dirty">
+    [is-dirty]="creating || (addForm?.dirty)"
+    [is-dirty-message]="creating ? operationInProgressWarning : (addForm?.dirty) ? unsavedChangesWarning : null">
 
     <div *ngIf="showHeader" class="header">
         <div class="header-icon-container">
@@ -48,6 +49,7 @@
                         <textbox
                             class="name-textbox"
                             [placeholder]="'enterName' | translate"
+                            [disablePopOverError]="true"
                             [control]="addForm ? addForm.controls['name'] : null">
                         </textbox>
                     </div>
@@ -80,15 +82,24 @@
 
     <div class="footer">
 
+        <div *ngIf="progressMessage"
+            class="progress-container">
+            <info-box
+                [typeClass]="progressMessageClass"
+                [infoText]="progressMessage">
+            </info-box>
+        </div>
+
         <div class="buttons-container">
             <button
                 class="custom-button"
-                [disabled]="addForm.invalid || addForm.pristine || !hasCreateAcess || !!slotsQuotaMessage"
-                (click)="submit()">
+                [disabled]="executeButtonDisabled || addForm.invalid || addForm.pristine || !hasCreateAcess || !!slotsQuotaMessage"
+                (click)="createSlot()">
                 {{ 'add' | translate }}
             </button>
             <button
                 class="custom-button"
+                [disabled]="creating"
                 (click)="closePanel()">
                 {{ 'close' | translate }}
             </button>

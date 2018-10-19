@@ -1,16 +1,17 @@
-import { Component, Injector, Input, OnDestroy, Output } from '@angular/core';
+import { Component, Injector, Input, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { TranslateService } from '@ngx-translate/core';
 import { Observable } from 'rxjs/Observable';
-import { Subject } from 'rxjs/Subject';
+import { InfoBoxType } from './../../../controls/info-box/info-box.component';
 import { ArmSiteDescriptor } from './../../../shared/resourceDescriptors';
 import { FeatureComponent } from './../../../shared/components/feature-component';
 import { LogCategories, ScenarioIds, SiteTabIds } from './../../../shared/models/constants';
 import { DropDownElement } from './../../../shared/models/drop-down-element';
+import { errorIds } from './../../../shared/models/error-ids';
 import { PortalResources } from './../../../shared/models/portal-resources';
 import { ArmObj, ResourceId } from './../../../shared/models/arm/arm-obj';
 import { Site } from './../../../shared/models/arm/site';
-import { SiteConfig } from './../../../shared/models/arm/site-config';
+import { AiService } from '../../../shared/services/ai.service';
 import { AuthzService } from './../../../shared/services/authz.service';
 import { LogService } from './../../../shared/services/log.service';
 import { PortalService } from '../../../shared/services/portal.service';
@@ -19,14 +20,6 @@ import { ScenarioService } from './../../../shared/services/scenario/scenario.se
 import { RequiredValidator } from './../../../shared/validators/requiredValidator';
 import { SlotNameValidator } from './../../../shared/validators/slotNameValidator';
 import { CloneSrcValidator } from './cloneSrcValidator';
-
-export interface AddSlotParameters {
-  siteId: ResourceId;
-  newSlotName: string;
-  location: string;
-  serverFarmId: string;
-  cloneConfig?: SiteConfig;
-}
 
 @Component({
   selector: 'add-slot',
@@ -41,19 +34,21 @@ export class AddSlotComponent extends FeatureComponent<ResourceId> implements On
   @Input()
   showHeader = false;
 
-  @Output('parameters')
-  parameters$: Subject<AddSlotParameters>;
-
-  public dirtyMessage: string;
+  public unsavedChangesWarning: string;
+  public operationInProgressWarning: string;
 
   public addForm: FormGroup;
-  public hasCreateAcess: boolean;
+  public hasCreateAcess = false;
   public slotsQuotaMessage: string;
   public isLoading = true;
   public loadingFailed = false;
   public cloneSrcIdDropDownOptions: DropDownElement<string>[];
+  public creating = false;
+  public executeButtonDisabled = false;
 
-  private _slotConfig: SiteConfig;
+  public progressMessage: string;
+  public progressMessageClass: InfoBoxType = 'info';
+
   private _siteId: string;
   private _slotsArm: ArmObj<Site>[];
 
@@ -61,6 +56,7 @@ export class AddSlotComponent extends FeatureComponent<ResourceId> implements On
     private _fb: FormBuilder,
     private _siteService: SiteService,
     private _translateService: TranslateService,
+    private _aiService: AiService,
     private _logService: LogService,
     private _portalService: PortalService,
     private _authZService: AuthzService,
@@ -69,12 +65,11 @@ export class AddSlotComponent extends FeatureComponent<ResourceId> implements On
   ) {
     super('AddSlotComponent', _injector, SiteTabIds.deploymentSlotsCreate);
 
-    // TODO [andimarc]
-    // For ibiza scenarios, this needs to match the deep link feature name used to load this in ibiza menu
     this.featureName = 'addslot';
     this.isParentComponent = true;
 
-    this.parameters$ = new Subject<AddSlotParameters>();
+    this.unsavedChangesWarning = this._translateService.instant(PortalResources.unsavedChangesWarning);
+    this.operationInProgressWarning = this._translateService.instant(PortalResources.slotCreateOperationInProgressWarning);
 
     const nameCtrl = this._fb.control({ value: null, disabled: true });
     const cloneSrcIdCtrl = this._fb.control({ value: null, disabled: true });
@@ -98,7 +93,12 @@ export class AddSlotComponent extends FeatureComponent<ResourceId> implements On
 
         this.cloneSrcIdDropDownOptions = null;
 
-        this._slotConfig = null;
+        this.creating = false;
+        this.executeButtonDisabled = false;
+
+        this.progressMessage = null;
+        this.progressMessageClass = 'info';
+
         this._slotsArm = null;
 
         const siteDescriptor = new ArmSiteDescriptor(resourceId);
@@ -199,30 +199,45 @@ export class AddSlotComponent extends FeatureComponent<ResourceId> implements On
     }
   }
 
-  submit() {
+  createSlot() {
+    this.addForm.markAsPristine();
+
     const newSlotName = this.addForm.controls['name'].value;
     const newSlotConfig = this.addForm.controls['cloneSrcConfig'].value;
+    const siteId = this._slotsArm[0].id;
+    const location = this._slotsArm[0].location;
+    const serverFarmId = this._slotsArm[0].properties.serverFarmId;
+    const cloneConfig = newSlotConfig;
 
-    this.parameters$.next({
-      siteId: this._slotsArm[0].id,
-      newSlotName: newSlotName,
-      location: this._slotsArm[0].location,
-      serverFarmId: this._slotsArm[0].properties.serverFarmId,
-      cloneConfig: newSlotConfig,
+    this.setBusy();
+    this.progressMessage = this._translateService.instant(PortalResources.slotNew_startCreateNotifyTitle).format(newSlotName);
+    this.progressMessageClass = 'spinner';
+    this.creating = true;
+    this.executeButtonDisabled = true;
+    this._siteService.createSlot(siteId, newSlotName, location, serverFarmId, cloneConfig).subscribe(r => {
+      if (r.isSuccessful) {
+        // TODO (andimarc): this._localStorageService.broadcast(Events.SlotCreated, { siteId: siteId, slotName: newSlotName });
+        this.progressMessage = this._translateService.instant(PortalResources.slotNew_startCreateSuccessNotifyTitle).format(newSlotName);
+        this.progressMessageClass = 'success';
+      } else {
+        this.progressMessage = this._translateService.instant(PortalResources.slotNew_startCreateFailureNotifyTitle).format(newSlotName);
+        this.progressMessageClass = 'error';
+        this.showComponentError({
+          message: this.progressMessage,
+          details: this.progressMessage,
+          errorId: errorIds.failedToCreateSlot,
+          resourceId: siteId,
+        });
+        this._aiService.trackEvent(errorIds.failedToCreateSlot, { error: r.error.errorId, id: siteId });
+        this._logService.error(LogCategories.addSlot, '/add-slot', r.error);
+      }
+
+      this.creating = false;
+      this.clearBusy();
     });
   }
 
   closePanel() {
-    const confirmMsg = this._translateService.instant(PortalResources.unsavedChangesWarning);
-    const close = !this.addForm || !this.addForm.dirty ? true : confirm(confirmMsg);
-
-    if (close) {
-      this.parameters$.next(null);
-      this._closeSelf();
-    }
-  }
-
-  private _closeSelf() {
     this._portalService.closeSelf();
   }
 }

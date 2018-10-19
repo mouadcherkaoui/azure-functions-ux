@@ -95,18 +95,6 @@
                 [infoActionFn]="canScaleUp ? slotsQuotaScaleUp : null">
             </info-box>
 
-            <info-box
-                *ngIf="addStatusMessage"
-                [typeClass]="addStatusClass"
-                [infoText]="addStatusMessage">
-            </info-box>
-
-            <info-box
-                *ngIf="swapStatusMessage"
-                [typeClass]="swapStatusClass"
-                [infoText]="swapStatusMessage">
-            </info-box>
-
             <div class="slots-header-container">
                 <div class="slots-icon-container">
                     <div load-image="image/slots.svg" class="icon-large"></div>
