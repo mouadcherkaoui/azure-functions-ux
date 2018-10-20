@@ -108,6 +108,9 @@ export enum LogEntryLevel {
 
 export enum BroadcastMessageId {
   planUpdated = 'PLAN_UPDATED',
+  siteUpdated = 'SITE_UPDATED',
+  slotSwap = 'SLOT_SWAP',
+  slotAdded = 'SLOT_ADDED',
 }
 
 // Mainly used for Ibiza legacy reasons
@@ -159,9 +162,10 @@ export interface SubscriptionRequest {
   subscriptionId: string;
 }
 
-export interface BroadcastMessage {
+export interface BroadcastMessage<T> {
   id: BroadcastMessageId;
   resourceId: string;
+  metadata: T;
 }
 
 export enum PartSize {

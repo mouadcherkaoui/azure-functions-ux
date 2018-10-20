@@ -65,7 +65,7 @@ export interface IPortalService {
   updateDirtyState(dirty: boolean, message?: string);
   logMessage(level: LogEntryLevel, message: string, ...restArgs: any[]);
   returnPcv3Results<T>(results: T);
-  broadcastMessage(id: BroadcastMessageId, resourceId: string);
+  broadcastMessage<T>(id: BroadcastMessageId, resourceId: string, metadata?: T);
 }
 
 @Injectable()
@@ -95,6 +95,7 @@ export class PortalService implements IPortalService {
   private notificationStartStream: Subject<NotificationStartedInfo>;
 
   private operationStream = new Subject<DataMessage<any>>();
+  private broadcastStream = new Subject<BroadcastMessage<any>>();
 
   public static inIFrame(): boolean {
     return window.parent !== window && window.location.pathname !== '/context.html';
@@ -137,6 +138,10 @@ export class PortalService implements IPortalService {
         this.logMessage(LogEntryLevel.Error, error.message);
       }
     });
+  }
+
+  getBroadcastEvents(messageType?: BroadcastMessageId) {
+    return this.broadcastStream.filter(m => !messageType || m.id === messageType);
   }
 
   sendTimerEvent(evt: TimerEvent) {
@@ -367,10 +372,11 @@ export class PortalService implements IPortalService {
     this.postMessage(Verbs.updateDirtyState, this._packageData(info));
   }
 
-  broadcastMessage(id: BroadcastMessageId, resourceId: string): void {
-    const info: BroadcastMessage = {
+  broadcastMessage<T>(id: BroadcastMessageId, resourceId: string, metadata?: T): void {
+    const info: BroadcastMessage<T> = {
       id,
       resourceId,
+      metadata,
     };
 
     this.postMessage(Verbs.broadcastMessage, this._packageData(info));
@@ -398,8 +404,6 @@ export class PortalService implements IPortalService {
   private iframeReceivedMsg(event: Event): void {
     if (!event || !event.data) {
       return;
-    } else if (event.data.data && event.data.data.frameId && event.data.data.frameId !== this.frameId) {
-      return;
     } else if (
       !this._configService.isOnPrem() &&
       !this._configService.isStandalone() &&
@@ -412,6 +416,13 @@ export class PortalService implements IPortalService {
 
     const data = event.data.data;
     const methodName = event.data.kind;
+
+    if (
+      (data.frameId !== this.frameId && methodName !== Verbs.broadcastMessage) ||
+      (data.frameId === this.frameId && methodName === Verbs.broadcastMessage)
+    ) {
+      return;
+    }
 
     console.log(`[iFrame-${this.frameId}] Received mesg: ${methodName}  for frameId: ${event.data.data && event.data.data.frameId}`);
 

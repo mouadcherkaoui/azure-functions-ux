@@ -11,6 +11,7 @@ import { FeatureComponent } from './../../../shared/components/feature-component
 import { LogCategories, SiteTabIds } from './../../../shared/models/constants';
 import { DropDownElement } from './../../../shared/models/drop-down-element';
 import { HttpResult } from './../../../shared/models/http-result';
+import { errorIds } from './../../../shared/models/error-ids';
 import { PortalResources } from './../../../shared/models/portal-resources';
 import { ArmObj, ResourceId, ArmArrayResult } from './../../../shared/models/arm/arm-obj';
 import { ConnectionString } from '../../../shared/models/arm/connection-strings';
@@ -25,7 +26,7 @@ import { PortalService } from '../../../shared/services/portal.service';
 import { SiteService } from './../../../shared/services/site.service';
 import { SlotSwapGroupValidator } from './slotSwapGroupValidator';
 import { SlotSwapSlotIdValidator } from './slotSwapSlotIdValidator';
-import { errorIds } from 'app/shared/models/error-ids';
+import { BroadcastMessageId } from '../../../shared/models/portal';
 
 export type SwapStep =
   | 'loading'
@@ -37,15 +38,24 @@ export type SwapStep =
   | 'phase2-complete'
   | 'complete';
 
-export type OperationType = 'slotsswap' | 'applySlotConfig' | 'resetSlotConfig';
+export type SwapOperationType = 'slotsswap' | 'applySlotConfig' | 'resetSlotConfig';
 
-export interface SwapSlotParameters {
-  operationType: OperationType;
-  uri: string;
+export type SwapOperationState = 'started' | 'completed';
+
+export interface SwapInfo {
+  isMultiPhase: boolean;
+  operationType: SwapOperationType;
+  srcId: string;
   srcName: string;
+  destId: string;
   destName: string;
-  swapType: string;
+  state?: SwapOperationState;
+}
+
+export interface SwapSlotParameters extends SwapInfo {
+  uri: string;
   content?: any;
+  swapType: string;
 }
 
 export type StickySettingValue = null | string | ConnectionString;
@@ -526,6 +536,8 @@ export class SwapSlotsComponent extends FeatureComponent<ResourceId> implements 
       .subscribe(r => {
         if (r.success) {
           // TODO (andimarc): this._localStorageService.broadcast(Events.ApplySlotConfig, { siteId: siteId, srcSlot: params.srcName, destSlot: params.destName });
+          this._portalService.broadcastMessage(BroadcastMessageId.slotSwap, params.srcId, params);
+          this._portalService.broadcastMessage(BroadcastMessageId.slotSwap, params.destId, params);
           // TODO (andimarc): refresh the _slotsList entries for the slot(s) involved in the swap?
           this.progressMessage = this._translateService.instant(PortalResources.swapSuccess, { operation: operation });
           this.progressMessageClass = 'success';
@@ -574,6 +586,8 @@ export class SwapSlotsComponent extends FeatureComponent<ResourceId> implements 
       .subscribe(r => {
         if (r.success) {
           // TODO (andimarc): this._localStorageService.broadcast(Events.ApplySlotConfig, { siteId: siteId, srcSlot: params.srcName, destSlot: params.destName });
+          this._portalService.broadcastMessage(BroadcastMessageId.slotSwap, params.srcId, params);
+          this._portalService.broadcastMessage(BroadcastMessageId.slotSwap, params.destId, params);
           this.progressMessage = this._translateService.instant(PortalResources.swapCancelSuccess, { operation: operation });
           this.progressMessageClass = 'success';
         } else {
@@ -616,6 +630,9 @@ export class SwapSlotsComponent extends FeatureComponent<ResourceId> implements 
         if (!location) {
           return Observable.of({ success: false, error: 'no location header' });
         } else {
+          params.state = 'started';
+          this._portalService.broadcastMessage(BroadcastMessageId.slotSwap, params.srcId, params);
+          this._portalService.broadcastMessage(BroadcastMessageId.slotSwap, params.destId, params);
           const pollingInterval = 1000;
           const pollingTimeout = 180;
           return Observable.interval(pollingInterval)
@@ -636,6 +653,9 @@ export class SwapSlotsComponent extends FeatureComponent<ResourceId> implements 
       .subscribe(r => {
         if (r.success) {
           // TODO (andimarc): this._localStorageService.broadcast(Events.SlotsSwap, { siteId: siteId, srcSlot: params.srcName, destSlot: params.destName });
+          params.state = 'completed';
+          this._portalService.broadcastMessage(BroadcastMessageId.slotSwap, params.srcId, params);
+          this._portalService.broadcastMessage(BroadcastMessageId.slotSwap, params.destId, params);
           this.progressMessage = this._translateService.instant(PortalResources.swapSuccess, { operation: operation });
           this.progressMessageClass = 'success';
         } else {
@@ -660,7 +680,7 @@ export class SwapSlotsComponent extends FeatureComponent<ResourceId> implements 
       });
   }
 
-  private _getOperationInputs(operationType: OperationType): SwapSlotParameters {
+  private _getOperationInputs(operationType: SwapOperationType): SwapSlotParameters {
     const multiPhase = this.swapForm.controls['multiPhase'].value;
     const srcId = this.swapForm.controls['srcId'].value;
     const destId = this.swapForm.controls['destId'].value;
@@ -679,12 +699,15 @@ export class SwapSlotsComponent extends FeatureComponent<ResourceId> implements 
     }
 
     return {
+      isMultiPhase: multiPhase,
       operationType: operationType,
-      uri: srcDescriptor.getTrimmedResourceId() + '/' + operationType,
+      srcId: srcId,
       srcName: srcName,
+      destId: destId,
       destName: destName,
-      swapType: swapType,
+      uri: srcDescriptor.getTrimmedResourceId() + '/' + operationType,
       content: content,
+      swapType: swapType,
     };
   }
 
