@@ -404,6 +404,8 @@ export class PortalService implements IPortalService {
   private iframeReceivedMsg(event: Event): void {
     if (!event || !event.data) {
       return;
+    } else if (event.data.data && event.data.data.frameId && event.data.data.frameId !== this.frameId) {
+      return;
     } else if (
       !this._configService.isOnPrem() &&
       !this._configService.isStandalone() &&
@@ -417,12 +419,12 @@ export class PortalService implements IPortalService {
     const data = event.data.data;
     const methodName = event.data.kind;
 
-    if (
-      (data.frameId !== this.frameId && methodName !== Verbs.broadcastMessage) ||
-      (data.frameId === this.frameId && methodName === Verbs.broadcastMessage)
-    ) {
-      return;
-    }
+    // if (
+    //   (data.frameId !== this.frameId && methodName !== Verbs.broadcastMessage) ||
+    //   (data.frameId === this.frameId && methodName === Verbs.broadcastMessage)
+    // ) {
+    //   return;
+    // }
 
     console.log(`[iFrame-${this.frameId}] Received mesg: ${methodName}  for frameId: ${event.data.data && event.data.data.frameId}`);
 
@@ -459,6 +461,8 @@ export class PortalService implements IPortalService {
       this.startupInfoObservable.next(this.startupInfo);
     } else if (methodName === Verbs.sendData) {
       this.operationStream.next(data);
+    } else if (methodName === Verbs.broadcastMessage) {
+      this.broadcastStream.next(data);
     }
   }
 
