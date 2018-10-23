@@ -13,7 +13,7 @@ export class UrlTemplates {
   private armService: ArmService;
   private scmUrl: string;
   private mainSiteUrl: string;
-  private useNewUrls: boolean;
+  private isLinux: boolean;
   private isEmbeddedFunctions: boolean;
 
   constructor(private site: ArmObj<Site>, injector: Injector) {
@@ -25,7 +25,7 @@ export class UrlTemplates {
     this.scmUrl = this.isEmbeddedFunctions ? null : this.getScmUrl();
     this.mainSiteUrl = this.isEmbeddedFunctions ? null : this.getMainUrl();
 
-    this.useNewUrls = ArmUtil.isLinuxApp(this.site);
+    this.isLinux = ArmUtil.isLinuxApp(this.site);
   }
 
   public getScmUrl() {
@@ -66,11 +66,13 @@ export class UrlTemplates {
       return `${ArmEmbeddedService.url}${this.site.id}/functions?api-version=${this.armService.websiteApiVersion}`;
     }
 
-    return this.useNewUrls ? `${this.mainSiteUrl}/admin/functions` : `${this.scmUrl}/api/functions`;
+    return `${this.mainSiteUrl}/admin/functions`;
   }
 
   get proxiesJsonUrl(): string {
-    return this.useNewUrls ? `${this.mainSiteUrl}/admin/vfs/site/wwwroot/proxies.json` : `${this.scmUrl}/api/vfs/site/wwwroot/proxies.json`;
+    return this.isLinux
+      ? `${this.mainSiteUrl}/admin/vfs/home/site/wwwroot/proxies.json`
+      : `${this.mainSiteUrl}/admin/vfs/site/wwwroot/proxies.json`;
   }
 
   getFunctionUrl(functionName: string, functionEntity?: string): string {
@@ -88,7 +90,7 @@ export class UrlTemplates {
       return `${ArmEmbeddedService.url}${this.site.id}/functions/${functionName}?api-version=${this.armService.websiteApiVersion}`;
     }
 
-    return this.useNewUrls ? `${this.mainSiteUrl}/admin/functions/${functionName}` : `${this.scmUrl}/api/functions/${functionName}`;
+    return `${this.mainSiteUrl}/admin/functions/${functionName}`;
   }
 
   get scmSettingsUrl(): string {
@@ -104,7 +106,9 @@ export class UrlTemplates {
   }
 
   get hostJsonUrl(): string {
-    return this.useNewUrls ? `${this.mainSiteUrl}/admin/vfs/home/site/wwwroot/host.json` : `${this.scmUrl}/api/functions/config`;
+    return this.isLinux
+      ? `${this.mainSiteUrl}/admin/vfs/home/site/wwwroot/host.json`
+      : `${this.mainSiteUrl}/admin/vfs/site/wwwroot/host.json`;
   }
 
   get scmTokenUrl(): string {

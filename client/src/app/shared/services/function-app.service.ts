@@ -86,17 +86,13 @@ export class FunctionAppService {
         return this._userService.getStartupInfo();
       })
       .concatMap(info => {
-        if (ArmUtil.isLinuxDynamic(context.site)) {
-          return this._cacheService.getArm(`${context.site.id}/hostruntime/admin/host/systemkeys/_master`);
-        } else if (ArmUtil.isLinuxApp(context.site)) {
-          return this._cacheService.get(
-            Constants.serviceHost + `api/runtimetoken${context.site.id}`,
-            false,
-            this.portalHeaders(info.token)
-          );
-        } else {
-          return this._cacheService.get(context.urlTemplates.scmTokenUrl, false, this.headers(info.token));
-        }
+        // if (ArmUtil.isLinuxDynamic(context.site)) {
+        // return this._cacheService.getArm(`${context.site.id}/hostruntime/admin/host/systemkeys/_master`);
+        // } else if (ArmUtil.isLinuxApp(context.site)) {
+        return this._cacheService.get(Constants.serviceHost + `api/runtimetoken${context.site.id}`, false, this.portalHeaders(info.token));
+        // } else {
+        //   return this._cacheService.get(context.urlTemplates.scmTokenUrl, false, this.headers(info.token));
+        // }
       })
       .map(r => {
         const value: string | FunctionKey = r.json();
