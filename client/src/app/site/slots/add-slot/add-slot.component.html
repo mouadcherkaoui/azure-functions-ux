@@ -1,6 +1,6 @@
 <div class="wrapper"
-    [is-dirty]="creating || (addForm?.dirty)"
-    [is-dirty-message]="creating ? operationInProgressWarning : (addForm?.dirty) ? unsavedChangesWarning : null">
+    [is-dirty]="isCreating || (addForm?.dirty)"
+    [is-dirty-message]="isCreating ? operationInProgressWarning : (addForm?.dirty) ? unsavedChangesWarning : null">
 
     <div *ngIf="showHeader" class="header">
         <div class="header-icon-container">
@@ -93,13 +93,13 @@
         <div class="buttons-container">
             <button
                 class="custom-button"
-                [disabled]="executeButtonDisabled || addForm.invalid || addForm.pristine || !hasCreateAcess || !!slotsQuotaMessage"
+                [disabled]="executeButtonDisabled || addForm?.invalid || addForm?.pristine || !hasCreateAcess || !!slotsQuotaMessage"
                 (click)="createSlot()">
                 {{ 'add' | translate }}
             </button>
             <button
                 class="custom-button"
-                [disabled]="creating"
+                [disabled]="isCreating"
                 (click)="closePanel()">
                 {{ 'close' | translate }}
             </button>
