@@ -254,26 +254,27 @@ export class SiteSummaryComponent extends FeatureComponent<TreeViewInfo<SiteData
       .takeUntil(this.ngUnsubscribe)
       .filter(m => m.resourceId === this.context.site.id)
       .subscribe(message => {
-        console.log(JSON.stringify(message));
         const swapInfo = message.metadata as SwapInfo;
-        switch (swapInfo.operationType) {
-          case 'slotsswap':
-          case 'applySlotConfig':
-            if (swapInfo.state === 'started') {
-              this._setTargetSwapSlot(swapInfo.srcName, swapInfo.destName);
-            } else {
-              this._viewInfo.node.refresh(null, true);
-            }
-            break;
-          case 'resetSlotConfig':
-            if (swapInfo.state === 'started') {
-              if (this.context) {
-                this.context.site.properties.targetSwapSlot = null;
+        if (!!swapInfo) {
+          switch (swapInfo.operationType) {
+            case 'slotsswap':
+            case 'applySlotConfig':
+              if (swapInfo.state === 'started') {
+                this._setTargetSwapSlot(swapInfo.srcName, swapInfo.destName);
+              } else {
+                this._viewInfo.node.refresh(null, true);
               }
-            } else {
-              this._viewInfo.node.refresh(null, true);
-            }
-            break;
+              break;
+            case 'resetSlotConfig':
+              if (swapInfo.state === 'started') {
+                if (this.context) {
+                  this.context.site.properties.targetSwapSlot = null;
+                }
+              } else {
+                this._viewInfo.node.refresh(null, true);
+              }
+              break;
+          }
         }
       });
   }

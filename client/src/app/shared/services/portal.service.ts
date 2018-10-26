@@ -419,13 +419,6 @@ export class PortalService implements IPortalService {
     const data = event.data.data;
     const methodName = event.data.kind;
 
-    // if (
-    //   (data.frameId !== this.frameId && methodName !== Verbs.broadcastMessage) ||
-    //   (data.frameId === this.frameId && methodName === Verbs.broadcastMessage)
-    // ) {
-    //   return;
-    // }
-
     console.log(`[iFrame-${this.frameId}] Received mesg: ${methodName}  for frameId: ${event.data.data && event.data.data.frameId}`);
 
     if (methodName === Verbs.sendStartupInfo) {

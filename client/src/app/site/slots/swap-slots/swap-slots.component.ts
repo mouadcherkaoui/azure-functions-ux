@@ -551,12 +551,6 @@ export class SwapSlotsComponent extends FeatureComponent<ResourceId> implements 
           });
           this.progressMessageClass = 'error';
           this._updatePhaseTracker('failed', null);
-          this.showComponentError({
-            message: this.progressMessage,
-            details: this.progressMessage,
-            errorId: errorIds.failedToSwapSlots,
-            resourceId: this._resourceId,
-          });
           this._aiService.trackEvent(errorIds.failedToSwapSlots, { error: r.error, id: this._resourceId });
           this._logService.error(LogCategories.swapSlots, '/swap-slots', r.error);
         }
@@ -604,12 +598,6 @@ export class SwapSlotsComponent extends FeatureComponent<ResourceId> implements 
             error: JSON.stringify(r.error),
           });
           this.progressMessageClass = 'error';
-          this.showComponentError({
-            message: this.progressMessage,
-            details: this.progressMessage,
-            errorId: errorIds.failedToSwapSlots,
-            resourceId: this._resourceId,
-          });
           this._aiService.trackEvent(errorIds.failedToSwapSlots, { error: r.error, id: this._resourceId });
           this._logService.error(LogCategories.swapSlots, '/swap-slots', r.error);
         }
@@ -674,12 +662,6 @@ export class SwapSlotsComponent extends FeatureComponent<ResourceId> implements 
             error: JSON.stringify(r.error),
           });
           this.progressMessageClass = 'error';
-          this.showComponentError({
-            message: this.progressMessage,
-            details: this.progressMessage,
-            errorId: errorIds.failedToSwapSlots,
-            resourceId: this._resourceId,
-          });
           this._aiService.trackEvent(errorIds.failedToSwapSlots, { error: r.error, id: this._resourceId });
           this._logService.error(LogCategories.swapSlots, '/swap-slots', r.error);
         }

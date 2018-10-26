@@ -15,14 +15,14 @@
         </command>
 
         <command
-            displayText="{{ 'slotNew' | translate }}"
+            [displayText]="'slotNew' | translate"
             iconUrl="image/add.svg"
             (click)="showAddControls()"
             [disabled]="addSlotCommandDisabled">
         </command>
 
         <command
-            displayText="{{ (siteArm?.properties.targetSwapSlot ? 'completeSwap' : 'swap') | translate }}"
+            [displayText]="(siteArm?.properties.targetSwapSlot ? 'completeSwap' : 'swap') | translate"
             iconUrl="image/swap.svg"
             (click)="showSwapControls()"
             [disabled]="swapSlotsCommandDisabled">

@@ -52,7 +52,7 @@ export class AddSlotComponent extends FeatureComponent<ResourceId> implements On
   public isLoading = true;
   public loadingFailed = false;
   public cloneSrcIdDropDownOptions: DropDownElement<string>[];
-  public creating = false;
+  public isCreating = false;
   public executeButtonDisabled = false;
 
   public progressMessage: string;
@@ -102,7 +102,7 @@ export class AddSlotComponent extends FeatureComponent<ResourceId> implements On
 
         this.cloneSrcIdDropDownOptions = null;
 
-        this.creating = false;
+        this.isCreating = false;
         this.executeButtonDisabled = false;
 
         this.progressMessage = null;
@@ -223,12 +223,16 @@ export class AddSlotComponent extends FeatureComponent<ResourceId> implements On
       state: 'started',
     };
 
+    this.addForm.controls['name'].disable();
+    this.addForm.controls['cloneSrcId'].disable();
+    this.addForm.controls['cloneSrcConfig'].disable();
+
     this._portalService.broadcastMessage(BroadcastMessageId.slotNew, siteId, slotNewInfo);
 
     this.setBusy();
     this.progressMessage = this._translateService.instant(PortalResources.slotNew_startCreateNotifyTitle).format(newSlotName);
     this.progressMessageClass = 'spinner';
-    this.creating = true;
+    this.isCreating = true;
     this.executeButtonDisabled = true;
     this._siteService.createSlot(siteId, newSlotName, location, serverFarmId, cloneConfig).subscribe(r => {
       if (r.isSuccessful) {
@@ -237,12 +241,6 @@ export class AddSlotComponent extends FeatureComponent<ResourceId> implements On
       } else {
         this.progressMessage = this._translateService.instant(PortalResources.slotNew_startCreateFailureNotifyTitle).format(newSlotName);
         this.progressMessageClass = 'error';
-        this.showComponentError({
-          message: this.progressMessage,
-          details: this.progressMessage,
-          errorId: errorIds.failedToCreateSlot,
-          resourceId: siteId,
-        });
         this._aiService.trackEvent(errorIds.failedToCreateSlot, { error: r.error.errorId, id: siteId });
         this._logService.error(LogCategories.addSlot, '/add-slot', r.error);
       }
@@ -251,7 +249,7 @@ export class AddSlotComponent extends FeatureComponent<ResourceId> implements On
       slotNewInfo.state = 'completed';
       this._portalService.broadcastMessage(BroadcastMessageId.slotNew, siteId, slotNewInfo);
 
-      this.creating = false;
+      this.isCreating = false;
       this.clearBusy();
     });
   }

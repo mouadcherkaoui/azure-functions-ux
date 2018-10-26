@@ -23,7 +23,7 @@ export class DeploymentSlotsShellComponent implements OnDestroy {
         (x['slot'] ? `/slots/${x['slot']}` : ``);
 
       this.viewInfo = {
-        resourceId: resourceId,
+        resourceId,
         dashboardType: DashboardType.none,
         node: null,
         data: null,
