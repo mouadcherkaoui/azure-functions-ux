@@ -8,7 +8,7 @@ import { InfoBoxType } from './../../../controls/info-box/info-box.component';
 import { ProgressBarStep, ProgressBarStepStatus } from './../../../controls/form-wizard/components/progress-bar.component';
 import { ArmSiteDescriptor } from './../../../shared/resourceDescriptors';
 import { FeatureComponent } from './../../../shared/components/feature-component';
-import { LogCategories, SiteTabIds } from './../../../shared/models/constants';
+import { LogCategories, SiteTabIds, SlotOperationState, SwapOperationType } from './../../../shared/models/constants';
 import { DropDownElement } from './../../../shared/models/drop-down-element';
 import { HttpResult } from './../../../shared/models/http-result';
 import { errorIds } from './../../../shared/models/error-ids';
@@ -38,10 +38,6 @@ export type SwapStep =
   | 'phase2-complete'
   | 'complete';
 
-export type SwapOperationType = 'slotsswap' | 'applySlotConfig' | 'resetSlotConfig';
-
-export type SwapOperationState = 'started' | 'completed';
-
 export interface SwapInfo {
   isMultiPhase: boolean;
   operationType: SwapOperationType;
@@ -49,7 +45,7 @@ export interface SwapInfo {
   srcName: string;
   destId: string;
   destName: string;
-  state?: SwapOperationState;
+  state?: SlotOperationState;
   success?: boolean;
 }
 
@@ -516,7 +512,7 @@ export class SwapSlotsComponent extends FeatureComponent<ResourceId> implements 
   }
 
   private _applySlotConfig() {
-    const params = this._getOperationInputs('applySlotConfig');
+    const params = this._getOperationInputs(SwapOperationType.applySlotConfig);
     const operation = this._translateService.instant(PortalResources.swapOperation, {
       swapType: params.swapType,
       srcSlot: params.srcName,
@@ -525,7 +521,7 @@ export class SwapSlotsComponent extends FeatureComponent<ResourceId> implements 
     this.progressMessage = this._translateService.instant(PortalResources.swapStarted, { operation: operation });
     this.progressMessageClass = 'spinner';
 
-    params.state = 'started';
+    params.state = SlotOperationState.started;
     this._portalService.broadcastMessage(BroadcastMessageId.slotSwap, params.srcId, params);
     this._portalService.broadcastMessage(BroadcastMessageId.slotSwap, params.destId, params);
 
@@ -556,7 +552,7 @@ export class SwapSlotsComponent extends FeatureComponent<ResourceId> implements 
         }
 
         params.success = r.success;
-        params.state = 'completed';
+        params.state = SlotOperationState.completed;
         this._portalService.broadcastMessage(BroadcastMessageId.slotSwap, params.srcId, params);
         this._portalService.broadcastMessage(BroadcastMessageId.slotSwap, params.destId, params);
 
@@ -566,7 +562,7 @@ export class SwapSlotsComponent extends FeatureComponent<ResourceId> implements 
   }
 
   private _resetSlotConfig() {
-    const params = this._getOperationInputs('resetSlotConfig');
+    const params = this._getOperationInputs(SwapOperationType.resetSlotConfig);
     const operation = this._translateService.instant(PortalResources.swapOperation, {
       swapType: params.swapType,
       srcSlot: params.srcName,
@@ -575,7 +571,7 @@ export class SwapSlotsComponent extends FeatureComponent<ResourceId> implements 
     this.progressMessage = this._translateService.instant(PortalResources.swapCancelStarted, { operation: operation });
     this.progressMessageClass = 'spinner';
 
-    params.state = 'started';
+    params.state = SlotOperationState.started;
     this._portalService.broadcastMessage(BroadcastMessageId.slotSwap, params.srcId, params);
     this._portalService.broadcastMessage(BroadcastMessageId.slotSwap, params.destId, params);
 
@@ -603,7 +599,7 @@ export class SwapSlotsComponent extends FeatureComponent<ResourceId> implements 
         }
 
         params.success = r.success;
-        params.state = 'completed';
+        params.state = SlotOperationState.completed;
         this._portalService.broadcastMessage(BroadcastMessageId.slotSwap, params.srcId, params);
         this._portalService.broadcastMessage(BroadcastMessageId.slotSwap, params.destId, params);
 
@@ -614,7 +610,7 @@ export class SwapSlotsComponent extends FeatureComponent<ResourceId> implements 
   }
 
   private _slotsSwap(multiPhase?: boolean) {
-    const params = this._getOperationInputs('slotsswap');
+    const params = this._getOperationInputs(SwapOperationType.slotsSwap);
     const operation = this._translateService.instant(PortalResources.swapOperation, {
       swapType: params.swapType,
       srcSlot: params.srcName,
@@ -623,7 +619,7 @@ export class SwapSlotsComponent extends FeatureComponent<ResourceId> implements 
     this.progressMessage = this._translateService.instant(PortalResources.swapStarted, { operation: operation });
     this.progressMessageClass = 'spinner';
 
-    params.state = 'started';
+    params.state = SlotOperationState.started;
     this._portalService.broadcastMessage(BroadcastMessageId.slotSwap, params.srcId, params);
     this._portalService.broadcastMessage(BroadcastMessageId.slotSwap, params.destId, params);
 
@@ -667,7 +663,7 @@ export class SwapSlotsComponent extends FeatureComponent<ResourceId> implements 
         }
 
         params.success = r.success;
-        params.state = 'completed';
+        params.state = SlotOperationState.completed;
         this._portalService.broadcastMessage(BroadcastMessageId.slotSwap, params.srcId, params);
         this._portalService.broadcastMessage(BroadcastMessageId.slotSwap, params.destId, params);
 

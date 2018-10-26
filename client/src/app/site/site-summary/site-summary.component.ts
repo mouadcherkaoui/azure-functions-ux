@@ -10,6 +10,8 @@ import {
   SiteTabIds,
   Links,
   NotificationIds,
+  SlotOperationState,
+  SwapOperationType,
 } from './../../shared/models/constants';
 import { ScenarioService } from './../../shared/services/scenario/scenario.service';
 import { UserService } from './../../shared/services/user.service';
@@ -257,16 +259,16 @@ export class SiteSummaryComponent extends FeatureComponent<TreeViewInfo<SiteData
         const swapInfo = message.metadata as SwapInfo;
         if (!!swapInfo) {
           switch (swapInfo.operationType) {
-            case 'slotsswap':
-            case 'applySlotConfig':
-              if (swapInfo.state === 'started') {
+            case SwapOperationType.slotsSwap:
+            case SwapOperationType.applySlotConfig:
+              if (swapInfo.state === SlotOperationState.started) {
                 this._setTargetSwapSlot(swapInfo.srcName, swapInfo.destName);
               } else {
                 this._viewInfo.node.refresh(null, true);
               }
               break;
-            case 'resetSlotConfig':
-              if (swapInfo.state === 'started') {
+            case SwapOperationType.resetSlotConfig:
+              if (swapInfo.state === SlotOperationState.started) {
                 if (this.context) {
                   this.context.site.properties.targetSwapSlot = null;
                 }
