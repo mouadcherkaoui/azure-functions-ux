@@ -5,7 +5,7 @@ import { Observable } from 'rxjs/Observable';
 import { InfoBoxType } from './../../../controls/info-box/info-box.component';
 import { ArmSiteDescriptor } from './../../../shared/resourceDescriptors';
 import { FeatureComponent } from './../../../shared/components/feature-component';
-import { LogCategories, ScenarioIds, SiteTabIds } from './../../../shared/models/constants';
+import { LogCategories, ScenarioIds, SiteTabIds, SlotOperationState } from './../../../shared/models/constants';
 import { DropDownElement } from './../../../shared/models/drop-down-element';
 import { errorIds } from './../../../shared/models/error-ids';
 import { PortalResources } from './../../../shared/models/portal-resources';
@@ -22,11 +22,9 @@ import { SlotNameValidator } from './../../../shared/validators/slotNameValidato
 import { CloneSrcValidator } from './cloneSrcValidator';
 import { BroadcastMessageId } from 'app/shared/models/portal';
 
-export type AddOperationState = 'started' | 'completed';
-
 export interface SlotNewInfo {
   resourceId: string;
-  state?: AddOperationState;
+  state?: SlotOperationState;
   success?: boolean;
 }
 
@@ -220,7 +218,7 @@ export class AddSlotComponent extends FeatureComponent<ResourceId> implements On
 
     const slotNewInfo: SlotNewInfo = {
       resourceId: `${siteId}/slots/${newSlotName}`,
-      state: 'started',
+      state: SlotOperationState.started,
     };
 
     this.addForm.controls['name'].disable();
@@ -246,7 +244,7 @@ export class AddSlotComponent extends FeatureComponent<ResourceId> implements On
       }
 
       slotNewInfo.success = r.isSuccessful;
-      slotNewInfo.state = 'completed';
+      slotNewInfo.state = SlotOperationState.completed;
       this._portalService.broadcastMessage(BroadcastMessageId.slotNew, siteId, slotNewInfo);
 
       this.isCreating = false;

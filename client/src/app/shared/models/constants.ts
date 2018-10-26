@@ -551,3 +551,15 @@ export class WebhookTypes {
   public static readonly github = 'github';
   public static readonly genericjson = 'genericjson';
 }
+
+export enum SlotOperationState {
+  started = 'STARTED',
+  completed = 'COMPLETED',
+  trackingAborted = 'TRACKING_ABORTED',
+}
+
+export enum SwapOperationType {
+  slotsSwap = 'slotsswap',
+  applySlotConfig = 'applySlotConfig',
+  resetSlotConfig = 'resetSlotConfig',
+}

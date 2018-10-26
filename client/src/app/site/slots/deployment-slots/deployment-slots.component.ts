@@ -5,7 +5,7 @@ import { Observable } from 'rxjs/Observable';
 import { CustomFormControl } from '../../../controls/click-to-edit/click-to-edit.component';
 import { ArmSiteDescriptor } from '../../../shared/resourceDescriptors';
 import { FeatureComponent } from '../../../shared/components/feature-component';
-import { Links, LogCategories, ScenarioIds, SiteTabIds } from '../../../shared/models/constants';
+import { Links, LogCategories, ScenarioIds, SiteTabIds, SlotOperationState, SwapOperationType } from '../../../shared/models/constants';
 import { PortalResources } from '../../../shared/models/portal-resources';
 import { ArmObj, ResourceId } from '../../../shared/models/arm/arm-obj';
 import { RoutingRule } from '../../../shared/models/arm/routing-rule';
@@ -261,20 +261,20 @@ export class DeploymentSlotsComponent extends FeatureComponent<TreeViewInfo<Site
       .subscribe(message => {
         const swapInfo = message.metadata as SwapInfo;
         switch (swapInfo.operationType) {
-          case 'slotsswap':
-          case 'applySlotConfig':
-            if (swapInfo.state === 'started') {
+          case SwapOperationType.slotsSwap:
+          case SwapOperationType.applySlotConfig:
+            if (swapInfo.state === SlotOperationState.started) {
               this._setTargetSwapSlot(swapInfo.srcName, swapInfo.destName);
-            } else if (swapInfo.state === 'completed') {
+            } else if (swapInfo.state === SlotOperationState.completed) {
               this.refresh(true);
             }
             break;
-          case 'resetSlotConfig':
-            if (swapInfo.state === 'started') {
+          case SwapOperationType.resetSlotConfig:
+            if (swapInfo.state === SlotOperationState.started) {
               if (this.siteArm) {
                 this.siteArm.properties.targetSwapSlot = null;
               }
-            } else if (swapInfo.state === 'completed') {
+            } else if (swapInfo.state === SlotOperationState.completed) {
               this.refresh(true);
             }
             break;
@@ -287,7 +287,7 @@ export class DeploymentSlotsComponent extends FeatureComponent<TreeViewInfo<Site
       .filter(m => m.resourceId === this.resourceId)
       .subscribe(message => {
         const slotNewInfo = message.metadata as SlotNewInfo;
-        if (slotNewInfo.state === 'completed' && slotNewInfo.success) {
+        if (slotNewInfo.state === SlotOperationState.completed && slotNewInfo.success) {
           this.refresh(true);
         }
       });
