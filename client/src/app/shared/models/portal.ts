@@ -86,6 +86,7 @@ export class Verbs {
   public static getSubscriptionInfo = 'get-subscription-info';
   public static getSpecCosts = 'get-spec-costs';
   public static broadcastMessage = 'broadcast-message';
+  public static setFrameboundBroadcastFilter = 'set-framebound-broadcast-filter';
 
   // Requests from Ibiza
   public static sendStartupInfo = 'send-startup-info';
@@ -232,4 +233,8 @@ export interface TokenResponse {
 export interface BladeResult<T> {
   reason: 'userNavigation' | 'childClosedSelf';
   data: T;
+}
+
+export interface BroadcastFilter {
+  allowedIds: string[];
 }
