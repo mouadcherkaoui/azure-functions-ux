@@ -4,7 +4,7 @@
     (click)="toggleState()"
     [disabled]="!hasWriteAccess"></command>
 
-  <command displayText="{{ (context?.site?.properties?.targetSwapSlot ? 'completeSwap' : 'swap') | translate }}"
+  <command displayText="{{ (targetSwapSlot ? 'completeSwap' : 'swap') | translate }}"
     iconUrl="image/swap.svg"
     (click)="openSwapBlade()"
     [disabled]="!hasWriteAccess || !hasSwapAccess || swapControlsOpen"></command>

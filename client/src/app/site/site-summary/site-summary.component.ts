@@ -10,6 +10,8 @@ import {
   SiteTabIds,
   Links,
   NotificationIds,
+  SlotOperationState,
+  SwapOperationType,
 } from './../../shared/models/constants';
 import { ScenarioService } from './../../shared/services/scenario/scenario.service';
 import { UserService } from './../../shared/services/user.service';
@@ -70,6 +72,7 @@ export class SiteSummaryComponent extends FeatureComponent<TreeViewInfo<SiteData
   public showQuickstart = false;
   public notifications: TopBarNotification[];
   public swapControlsOpen = false;
+  public targetSwapSlot: string;
 
   private _viewInfo: TreeViewInfo<SiteData>;
   private _subs: Subscription[];
@@ -118,7 +121,7 @@ export class SiteSummaryComponent extends FeatureComponent<TreeViewInfo<SiteData
         this._subs = info.subscriptions;
       });
 
-    this._setupSwapMessageSubscription();
+    this._setupPortalBroadcastSubscriptions();
   }
 
   protected setup(inputEvents: Observable<TreeViewInfo<SiteData>>) {
@@ -130,6 +133,7 @@ export class SiteSummaryComponent extends FeatureComponent<TreeViewInfo<SiteData
       })
       .switchMap(context => {
         this.context = context;
+        this.targetSwapSlot = context.site.properties.targetSwapSlot;
         const descriptor = new ArmSiteDescriptor(context.site.id);
         this.subscriptionId = descriptor.subscription;
 
@@ -248,7 +252,12 @@ export class SiteSummaryComponent extends FeatureComponent<TreeViewInfo<SiteData
       });
   }
 
-  private _setupSwapMessageSubscription() {
+  private _setupPortalBroadcastSubscriptions() {
+    this._portalService.setInboundBroadcastFilter([BroadcastMessageId.slotSwap]);
+    this._setupSlotSwapMessageSubscription();
+  }
+
+  private _setupSlotSwapMessageSubscription() {
     this._portalService
       .getBroadcastEvents(BroadcastMessageId.slotSwap)
       .takeUntil(this.ngUnsubscribe)
@@ -257,19 +266,17 @@ export class SiteSummaryComponent extends FeatureComponent<TreeViewInfo<SiteData
         const swapInfo = message.metadata as SwapInfo;
         if (!!swapInfo) {
           switch (swapInfo.operationType) {
-            case 'slotsswap':
-            case 'applySlotConfig':
-              if (swapInfo.state === 'started') {
+            case SwapOperationType.slotsSwap:
+            case SwapOperationType.applySlotConfig:
+              if (swapInfo.state === SlotOperationState.started) {
                 this._setTargetSwapSlot(swapInfo.srcName, swapInfo.destName);
               } else {
                 this._viewInfo.node.refresh(null, true);
               }
               break;
-            case 'resetSlotConfig':
-              if (swapInfo.state === 'started') {
-                if (this.context) {
-                  this.context.site.properties.targetSwapSlot = null;
-                }
+            case SwapOperationType.resetSlotConfig:
+              if (swapInfo.state === SlotOperationState.started) {
+                this.targetSwapSlot = null;
               } else {
                 this._viewInfo.node.refresh(null, true);
               }
@@ -280,12 +287,10 @@ export class SiteSummaryComponent extends FeatureComponent<TreeViewInfo<SiteData
   }
 
   private _setTargetSwapSlot(srcSlotName: string, destSlotName: string) {
-    if (this.context) {
-      if (this._slotName.toLowerCase() === srcSlotName.toLowerCase()) {
-        this.context.site.properties.targetSwapSlot = destSlotName;
-      } else if (this._slotName.toLowerCase() === destSlotName.toLowerCase()) {
-        this.context.site.properties.targetSwapSlot = srcSlotName;
-      }
+    if (this._slotName.toLowerCase() === srcSlotName.toLowerCase()) {
+      this.targetSwapSlot = destSlotName;
+    } else if (this._slotName.toLowerCase() === destSlotName.toLowerCase()) {
+      this.targetSwapSlot = srcSlotName;
     }
   }
 

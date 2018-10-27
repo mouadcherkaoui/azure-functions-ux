@@ -15,6 +15,7 @@ import {
   DirtyStateInfo,
   SubscriptionRequest,
   BladeResult,
+  BroadcastFilter,
 } from './../models/portal';
 import {
   Event,
@@ -142,6 +143,11 @@ export class PortalService implements IPortalService {
 
   getBroadcastEvents(messageType?: BroadcastMessageId) {
     return this.broadcastStream.filter(m => !messageType || m.id === messageType);
+  }
+
+  setInboundBroadcastFilter(allowedIds: BroadcastMessageId[]) {
+    const payload: BroadcastFilter = { allowedIds: allowedIds || [] };
+    this.postMessage(Verbs.setFrameboundBroadcastFilter, this._packageData(payload));
   }
 
   sendTimerEvent(evt: TimerEvent) {

@@ -5,7 +5,7 @@ import { Observable } from 'rxjs/Observable';
 import { CustomFormControl } from '../../../controls/click-to-edit/click-to-edit.component';
 import { ArmSiteDescriptor } from '../../../shared/resourceDescriptors';
 import { FeatureComponent } from '../../../shared/components/feature-component';
-import { Links, LogCategories, ScenarioIds, SiteTabIds } from '../../../shared/models/constants';
+import { Links, LogCategories, ScenarioIds, SiteTabIds, SlotOperationState, SwapOperationType } from '../../../shared/models/constants';
 import { PortalResources } from '../../../shared/models/portal-resources';
 import { ArmObj, ResourceId } from '../../../shared/models/arm/arm-obj';
 import { RoutingRule } from '../../../shared/models/arm/routing-rule';
@@ -100,7 +100,7 @@ export class DeploymentSlotsComponent extends FeatureComponent<TreeViewInfo<Site
       }
     };
 
-    this._setupSwapMessageSubscription();
+    this._setupPortalBroadcastSubscriptions();
   }
 
   scaleUp() {
@@ -253,7 +253,13 @@ export class DeploymentSlotsComponent extends FeatureComponent<TreeViewInfo<Site
       });
   }
 
-  private _setupSwapMessageSubscription() {
+  private _setupPortalBroadcastSubscriptions() {
+    this._portalService.setInboundBroadcastFilter([BroadcastMessageId.slotSwap, BroadcastMessageId.slotNew]);
+    this._setupSlotSwapMessageSubscription();
+    this._setupSlotNewMessageSubscription();
+  }
+
+  private _setupSlotSwapMessageSubscription() {
     this._portalService
       .getBroadcastEvents(BroadcastMessageId.slotSwap)
       .takeUntil(this.ngUnsubscribe)
@@ -261,33 +267,35 @@ export class DeploymentSlotsComponent extends FeatureComponent<TreeViewInfo<Site
       .subscribe(message => {
         const swapInfo = message.metadata as SwapInfo;
         switch (swapInfo.operationType) {
-          case 'slotsswap':
-          case 'applySlotConfig':
-            if (swapInfo.state === 'started') {
+          case SwapOperationType.slotsSwap:
+          case SwapOperationType.applySlotConfig:
+            if (swapInfo.state === SlotOperationState.started) {
               this._setTargetSwapSlot(swapInfo.srcName, swapInfo.destName);
-            } else if (swapInfo.state === 'completed') {
+            } else if (swapInfo.state === SlotOperationState.completed) {
               this.refresh(true);
             }
             break;
-          case 'resetSlotConfig':
-            if (swapInfo.state === 'started') {
+          case SwapOperationType.resetSlotConfig:
+            if (swapInfo.state === SlotOperationState.started) {
               if (this.siteArm) {
                 this.siteArm.properties.targetSwapSlot = null;
               }
-            } else if (swapInfo.state === 'completed') {
+            } else if (swapInfo.state === SlotOperationState.completed) {
               this.refresh(true);
             }
             break;
         }
       });
+  }
 
+  private _setupSlotNewMessageSubscription() {
     this._portalService
       .getBroadcastEvents(BroadcastMessageId.slotNew)
       .takeUntil(this.ngUnsubscribe)
       .filter(m => m.resourceId === this.resourceId)
       .subscribe(message => {
         const slotNewInfo = message.metadata as SlotNewInfo;
-        if (slotNewInfo.state === 'completed' && slotNewInfo.success) {
+        if (slotNewInfo.state === SlotOperationState.completed && slotNewInfo.success) {
           this.refresh(true);
         }
       });
@@ -337,11 +345,11 @@ export class DeploymentSlotsComponent extends FeatureComponent<TreeViewInfo<Site
     this.refreshCommandDisabled = operationOpenOrInProgress || !this.featureSupported;
 
     this.saveAndDiscardCommandsDisabled = this.refreshCommandDisabled || !this.hasWriteAccess;
-    if (this.mainForm) {
+    if (this.mainForm && this.mainForm.controls['rulesGroup']) {
       if (this.saveAndDiscardCommandsDisabled) {
-        this.mainForm.disable();
+        this.mainForm.controls['rulesGroup'].disable();
       } else {
-        this.mainForm.enable();
+        this.mainForm.controls['rulesGroup'].enable();
       }
     }
 
@@ -458,8 +466,8 @@ export class DeploymentSlotsComponent extends FeatureComponent<TreeViewInfo<Site
           this._portalService.stopNotification(notificationId, true, this._translateService.instant(PortalResources.configUpdateSuccess));
 
           this._siteConfigArm = r.json();
-          this._setupForm();
           this._updateDisabledState();
+          this._setupForm();
         });
     }
   }

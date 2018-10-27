@@ -109,6 +109,10 @@ th {
   word-wrap: break-word;
 }
 
+.revert-dropdown-container:last-child {
+  margin-bottom: 75px;
+}
+
 :host-context(#app-root[theme='dark']) {
   .bullet {
     &.src {
