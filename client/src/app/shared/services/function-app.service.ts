@@ -41,6 +41,7 @@ import { ExtensionJobsStatus } from '../models/extension-jobs-status';
 import { ExtensionInfo, ExtensionsJson } from 'app/shared/models/extension-info';
 import { Version } from 'app/shared/Utilities/version';
 import { ApplicationSettings } from 'app/shared/models/arm/application-settings';
+import { ArmSiteDescriptor } from '../resourceDescriptors';
 
 type Result<T> = Observable<HttpResult<T>>;
 @Injectable()
@@ -792,25 +793,9 @@ export class FunctionAppService {
   }
 
   getSlotName(context: FunctionAppContext | string): string {
-    // slots id looks like
-    // /subscriptions/<subscriptionId>/resourceGroups/<resourceGroupName>/providers/Microsoft.Web/sites/<siteName>/slots/<slotName>
-    // split('/')
-    //  [
-    //      0: "",
-    //      1: "subscriptions",
-    //      2: "<subscriptionId>",
-    //      3: "resourceGroups",
-    //      4: "<resourceGroupName>",
-    //      5: "providers",
-    //      6: "Microsoft.Web",
-    //      7: "sites",
-    //      8: "<siteName>",
-    //      9: "slots:,
-    //      10: "<slotName>"
-    //  ]
     const id = typeof context === 'string' ? context : context.site.id;
-    const siteSegments = id.split('/');
-    return siteSegments.length === 11 && siteSegments[9].toLowerCase() === 'slots' ? siteSegments[10] : null;
+    const descriptor = new ArmSiteDescriptor(id);
+    return descriptor.slot;
   }
 
   getSlotsList(context: FunctionAppContext | string): Result<ArmObj<Site>[]> {

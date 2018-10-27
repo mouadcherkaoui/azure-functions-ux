@@ -4,6 +4,7 @@ import { Component, OnDestroy } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import { ActivatedRoute } from '@angular/router';
 import { Subject } from 'rxjs/Subject';
+import { ArmSiteDescriptor } from 'app/shared/resourceDescriptors';
 
 @Component({
   selector: 'app-deployment-slots-shell',
@@ -18,12 +19,8 @@ export class DeploymentSlotsShellComponent implements OnDestroy {
     this.ngUnsubscribe = new Subject<void>();
 
     route.params.takeUntil(this.ngUnsubscribe).subscribe(x => {
-      const resourceId =
-        `/subscriptions/${x['subscriptionId']}/resourceGroups/${x['resourceGroup']}/providers/Microsoft.Web/sites/${x['site']}` +
-        (x['slot'] ? `/slots/${x['slot']}` : ``);
-
       this.viewInfo = {
-        resourceId,
+        resourceId: ArmSiteDescriptor.generateResourceUri(x['subscriptionId'], x['resourceGroup'], x['site'], x['slot']),
         dashboardType: DashboardType.none,
         node: null,
         data: null,

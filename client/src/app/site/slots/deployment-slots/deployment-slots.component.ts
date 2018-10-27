@@ -100,7 +100,7 @@ export class DeploymentSlotsComponent extends FeatureComponent<TreeViewInfo<Site
       }
     };
 
-    this._setupSwapMessageSubscription();
+    this._setupPortalBroadcastSubscriptions();
   }
 
   scaleUp() {
@@ -253,7 +253,13 @@ export class DeploymentSlotsComponent extends FeatureComponent<TreeViewInfo<Site
       });
   }
 
-  private _setupSwapMessageSubscription() {
+  private _setupPortalBroadcastSubscriptions() {
+    this._portalService.setInboundBroadcastFilter([BroadcastMessageId.slotSwap, BroadcastMessageId.slotNew]);
+    this._setupSlotSwapMessageSubscription();
+    this._setupSlotNewMessageSubscription();
+  }
+
+  private _setupSlotSwapMessageSubscription() {
     this._portalService
       .getBroadcastEvents(BroadcastMessageId.slotSwap)
       .takeUntil(this.ngUnsubscribe)
@@ -280,7 +286,9 @@ export class DeploymentSlotsComponent extends FeatureComponent<TreeViewInfo<Site
             break;
         }
       });
+  }
 
+  private _setupSlotNewMessageSubscription() {
     this._portalService
       .getBroadcastEvents(BroadcastMessageId.slotNew)
       .takeUntil(this.ngUnsubscribe)
@@ -337,11 +345,11 @@ export class DeploymentSlotsComponent extends FeatureComponent<TreeViewInfo<Site
     this.refreshCommandDisabled = operationOpenOrInProgress || !this.featureSupported;
 
     this.saveAndDiscardCommandsDisabled = this.refreshCommandDisabled || !this.hasWriteAccess;
-    if (this.mainForm) {
+    if (this.mainForm && this.mainForm.controls['rulesGroup']) {
       if (this.saveAndDiscardCommandsDisabled) {
-        this.mainForm.disable();
+        this.mainForm.controls['rulesGroup'].disable();
       } else {
-        this.mainForm.enable();
+        this.mainForm.controls['rulesGroup'].enable();
       }
     }
 
@@ -458,8 +466,8 @@ export class DeploymentSlotsComponent extends FeatureComponent<TreeViewInfo<Site
           this._portalService.stopNotification(notificationId, true, this._translateService.instant(PortalResources.configUpdateSuccess));
 
           this._siteConfigArm = r.json();
-          this._setupForm();
           this._updateDisabledState();
+          this._setupForm();
         });
     }
   }
