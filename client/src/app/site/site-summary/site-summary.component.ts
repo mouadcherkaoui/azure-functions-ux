@@ -12,6 +12,7 @@ import {
   NotificationIds,
   SlotOperationState,
   SwapOperationType,
+  FeatureFlags,
 } from './../../shared/models/constants';
 import { ScenarioService } from './../../shared/services/scenario/scenario.service';
 import { UserService } from './../../shared/services/user.service';
@@ -582,11 +583,18 @@ export class SiteSummaryComponent extends FeatureComponent<TreeViewInfo<SiteData
   }
 
   openSwapBlade() {
-    const bladeInfo: OpenBladeInfo = {
+    const oldBladeInfo: OpenBladeInfo = {
+      detailBlade: 'WebsiteSlotsListBlade',
+      detailBladeInputs: { resourceUri: this.context.site.id },
+    };
+
+    const newBladeInfo: OpenBladeInfo = {
       detailBlade: 'SwapSlotsFrameBlade',
       detailBladeInputs: { id: this.context.site.id },
       openAsContextBlade: true,
     };
+
+    const bladeInfo = Url.getParameterByName(null, FeatureFlags.UseNewSlotsBlade) === 'true' ? newBladeInfo : oldBladeInfo;
 
     this.swapControlsOpen = true;
     this._portalService

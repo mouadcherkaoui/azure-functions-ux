@@ -563,3 +563,7 @@ export enum SwapOperationType {
   applySlotConfig = 'applySlotConfig',
   resetSlotConfig = 'resetSlotConfig',
 }
+
+export class FeatureFlags {
+  public static UseNewSlotsBlade = 'UseNewSlotsBlade';
+}
