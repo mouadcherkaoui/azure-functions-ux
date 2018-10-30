@@ -138,6 +138,7 @@ class JavaStack extends React.Component<Props, JavaStackState> {
           label={t('javaMinorVersion')}
           id="app-settings-java-minor-verison"
           options={javaMinorVersionOptions}
+          subLabel={t('javaMinorVersionLabelHelp')}
         />
         <Field
           name="config.properties.javaContainer"

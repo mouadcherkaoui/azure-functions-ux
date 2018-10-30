@@ -40,6 +40,11 @@ const PythonStack: React.StatelessComponent<Props> = props => {
       name="config.properties.pythonVersion"
       component={Dropdown}
       disabled={!values.siteWritePermission}
+      subLabel={t('pythonInfoText')}
+      learnMore={{
+        learnMoreLink: 'https://go.microsoft.com/fwlink/?linkid=852196',
+        learnMoreText: t('clickToLearnMore'),
+      }}
       label={t('pythonVersion')}
       id="pythonVersion"
       options={pythonVersions}

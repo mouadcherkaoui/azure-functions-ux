@@ -115,6 +115,10 @@ class AppSettingsForm extends React.Component<FormikProps<AppSettingsFormValues>
     return (
       <PivotItem itemKey="applicationSettings" linkText={t('applicationSettings')}>
         <h3>{t('applicationSettings')}</h3>
+        <p>
+          Application Settings are encrypted at rest and transmitted over an encrypted channel. You can choose to display them in plain text
+          in your browser by using the controls below.
+        </p>
         {values.siteWritePermission ? (
           <ApplicationSettings {...props} />
         ) : (
@@ -125,6 +129,10 @@ class AppSettingsForm extends React.Component<FormikProps<AppSettingsFormValues>
           </div>
         )}
         <h3>{t('connectionStrings')}</h3>
+        <p>
+          Connection Strings are encrypted at rest and transmitted over an encrypted channel. You can choose to display them in plain text
+          in your browser by using the controls below.
+        </p>
         {values.siteWritePermission ? (
           <ConnectionStrings {...props} />
         ) : (

@@ -55,6 +55,7 @@ const Platform: React.SFC<FormikProps<AppSettingsFormValues> & InjectedTranslate
             label={t('webSockets')}
             id="app-settings-web-sockets-enabled"
             disabled={!values.siteWritePermission}
+            subLabel={t('webSocketsEnabledLabelHelp')}
             options={[
               {
                 key: true,
@@ -73,6 +74,11 @@ const Platform: React.SFC<FormikProps<AppSettingsFormValues> & InjectedTranslate
         component={Dropdown}
         label={t('ftpState')}
         id="app-settings-ftps-state"
+        subLabel={t('FTPMessage')}
+        learnMore={{
+          learnMoreLink: 'https://go.microsoft.com/fwlink/?linkid=871316',
+          learnMoreText: t('clickToLearnMore'),
+        }}
         disabled={!values.siteWritePermission}
         options={[
           {
@@ -112,6 +118,11 @@ const Platform: React.SFC<FormikProps<AppSettingsFormValues> & InjectedTranslate
         label={t('clientAffinityEnabledLabel')}
         id="app-settings-clientAffinityEnabled"
         disabled={!values.siteWritePermission}
+        subLabel={t('clientAffinityInfoText')}
+        learnMore={{
+          learnMoreLink: 'https://go.microsoft.com/fwlink/?linkid=798249',
+          learnMoreText: t('clickToLearnMore'),
+        }}
         options={[
           {
             key: true,

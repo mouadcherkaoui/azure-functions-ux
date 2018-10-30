@@ -18,6 +18,9 @@ const containerStyle = style({
   minHeight: '23px',
   fontWeight: 400,
 });
+
+const LabelStyle = style({ marginBottom: '1px', paddingBottom: '0px' });
+const subLabelStyle = style({ fontSize: '12px', marginTop: '1px', paddingTop: '0px' });
 const Dropdown = (props: FieldProps & IDropdownProps & CustomDropdownProps) => {
   const { field, form, label, options, learnMore, subLabel, ...rest } = props;
   const onChange = (e: unknown, option: IDropdownOption) => {
@@ -25,18 +28,11 @@ const Dropdown = (props: FieldProps & IDropdownProps & CustomDropdownProps) => {
   };
   return (
     <div className={containerStyle}>
-      <Label
-        required={true}
-        id={`${rest.id}-label`}
-        htmlFor={rest.id}
-        style={{ color: '#595959', marginBottom: '1px', paddingBottom: '0px' }}>
+      <Label required={true} id={`${rest.id}-label`} htmlFor={rest.id} className={LabelStyle}>
         {label}
       </Label>
       {subLabel && (
-        <Label
-          id={`${rest.id}-sublabel`}
-          required={false}
-          style={{ color: '#595959', fontSize: '12px', marginTop: '1px', paddingTop: '0px' }}>
+        <Label id={`${rest.id}-sublabel`} className={subLabelStyle} required={false}>
           {subLabel}
           {learnMore && (
             <Link href={learnMore.learnMoreLink} target="_blank">
