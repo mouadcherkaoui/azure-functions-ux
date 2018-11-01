@@ -4417,4 +4417,19 @@ Set to "External URL" to use an API definition that is hosted elsewhere.</value>
   <data name="configYamlInvalid" xml:space="preserve">
     <value>Invalid YML format. Error: '{0}'.</value>
   </data>
+  <data name="notSelected" xml:space="preserve">
+    <value>Not Selected</value>
+  </data>
+  <data name="latest" xml:space="preserve">
+    <value>Latest</value>
+  </data>
+  <data name="versionLatest" xml:space="preserve">
+    <value>{{version}} (latest)</value>
+  </data>
+  <data name="functionsJavaMajorVersionWarning" xml:space="preserve">
+    <value>You have not selected a Java version. If the setting is not configured, your app will use the latest version of {{defaultJavaVersion}}</value>
+  </data>
+  <data name="functionsJavaMinorVersionWarning" xml:space="preserve">
+    <value>You have selected a specific Java minor version. It is advised that you configure this setting to 'Latest' unless your app may break on newer versions. Selecting a specific minor version may result in longer cold start times.</value>
+  </data>
 </root>
