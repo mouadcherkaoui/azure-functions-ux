@@ -15,6 +15,7 @@ import { Observable } from 'rxjs/Observable';
 import { FunctionAppService } from 'app/shared/services/function-app.service';
 import { NavigableComponent, ExtendedTreeViewInfo } from '../shared/components/navigable-component';
 import { DashboardType } from '../tree-view/models/dashboard-type';
+import { FunctionsGenerations } from 'app/shared/models/constants';
 
 @Component({
   selector: 'function-manage',
@@ -60,7 +61,7 @@ export class FunctionManageComponent extends NavigableComponent {
         this.functionInfo.config.disabled
           ? this._portalService.logAction('function-manage', 'disable')
           : this._portalService.logAction('function-manage', 'enable');
-        return this.runtimeVersion === 'V2'
+        return this.runtimeVersion === FunctionsGenerations.v2
           ? this._functionAppService.updateDisabledAppSettings(this.context, [this.functionInfo])
           : this._functionAppService.updateFunction(this.context, this.functionInfo);
       })

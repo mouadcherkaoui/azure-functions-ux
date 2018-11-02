@@ -47,7 +47,7 @@ import { FunctionKeys } from '../shared/models/function-key';
 import { MonacoHelper } from '../shared/Utilities/monaco.helper';
 import { AccessibilityHelper } from '../shared/Utilities/accessibility-helper';
 import { LogService } from '../shared/services/log.service';
-import { LogCategories, WebhookTypes } from '../shared/models/constants';
+import { LogCategories, WebhookTypes, FunctionsGenerations } from '../shared/models/constants';
 import { ArmUtil } from '../shared/Utilities/arm-utils';
 
 type FileSelectionEvent = VfsObject | [VfsObject, monaco.editor.IMarkerData[], monaco.editor.IMarkerData];
@@ -219,7 +219,7 @@ export class FunctionDevComponent extends FunctionAppContextComponent
         this.disabled = this._functionAppService
           .getFunctionAppEditMode(functionView.context)
           .map(r => (r.isSuccessful ? EditModeHelper.isReadOnly(r.result) : false));
-        this.showErrorsAndWarnings = this._functionAppService.getRuntimeGeneration(functionView.context).map(v => v === 'V1');
+        this.showErrorsAndWarnings = this._functionAppService.isRuntimeGeneration(functionView.context, FunctionsGenerations.v1);
         this.showConsole = !ArmUtil.isLinuxDynamic(functionView.context.site);
         return Observable.zip(
           Observable.of(functionView),

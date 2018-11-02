@@ -9,6 +9,7 @@ import {
   Links,
   SiteTabIds,
   SubscriptionQuotaIds,
+  FunctionsGenerations,
 } from './../../shared/models/constants';
 import { Dom } from './../../shared/Utilities/dom';
 import { Binding } from './../../shared/models/binding';
@@ -229,7 +230,7 @@ export class FunctionNewComponent extends FunctionAppContextComponent implements
 
         if (
           this.appSettingsArm.properties.hasOwnProperty(Constants.functionsWorkerRuntimeAppSettingsName) &&
-          this.runtimeVersion === 'V2'
+          this.runtimeVersion === FunctionsGenerations.v2
         ) {
           const workerRuntime = this.appSettingsArm.properties[Constants.functionsWorkerRuntimeAppSettingsName];
           this.functionAppLanguage = WorkerRuntimeLanguages[workerRuntime];
@@ -829,7 +830,7 @@ export class FunctionNewComponent extends FunctionAppContextComponent implements
   }
 
   quickstart() {
-    if (this.runtimeVersion === 'V1') {
+    if (this.runtimeVersion === FunctionsGenerations.v1) {
       this.functionsNode.openCreateDashboard(DashboardType.CreateFunctionQuickstartDashboard);
     } else {
       this._broadcastService.broadcastEvent(BroadcastEvent.OpenTab, SiteTabIds.quickstart);

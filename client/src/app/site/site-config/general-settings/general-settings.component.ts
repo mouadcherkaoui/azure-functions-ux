@@ -1,8 +1,7 @@
 import { OsType } from './../../../shared/models/arm/stacks';
 import { ConfigSaveComponent, ArmSaveConfigs } from 'app/shared/components/config-save-component';
 import {
-  Constants,
-  FunctionsRuntimeVersions,
+  FunctionsGenerations,
   Links,
   LogCategories,
   ScenarioIds,
@@ -35,6 +34,7 @@ import { ScenarioService } from 'app/shared/services/scenario/scenario.service';
 import { BillingService } from 'app/shared/services/billing.service';
 import { HttpResult } from 'app/shared/models/http-result';
 import { ApplicationSettings } from 'app/shared/models/arm/application-settings';
+import { FunctionsVersionInfoHelper } from 'app/shared/models/functions-version-info';
 
 @Component({
   selector: 'general-settings',
@@ -226,13 +226,14 @@ export class GeneralSettingsComponent extends ConfigSaveComponent implements OnC
   }
 
   private _isJavaFunctionApp(siteArm: ArmObj<Site>, appSettingsArm: ArmObj<ApplicationSettings>): boolean {
+    if (!siteArm || !ArmUtil.isFunctionApp(siteArm) || !appSettingsArm || !appSettingsArm.properties) {
+      return false;
+    }
+
+    const settings = appSettingsArm.properties;
     return (
-      !!siteArm &&
-      ArmUtil.isFunctionApp(siteArm) &&
-      !!appSettingsArm &&
-      !!appSettingsArm.properties &&
-      appSettingsArm.properties[Constants.functionsWorkerRuntimeAppSettingsName] === WorkerRuntimeLanguages.java.toLowerCase() &&
-      appSettingsArm.properties[Constants.runtimeVersionAppSettingName] === FunctionsRuntimeVersions.v2
+      FunctionsVersionInfoHelper.hasFunctionWorkerLanguaageSet(settings, WorkerRuntimeLanguages.java) &&
+      FunctionsVersionInfoHelper.hasFunctionGenerationSet(settings, FunctionsGenerations.v2)
     );
   }
 

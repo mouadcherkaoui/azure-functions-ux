@@ -484,9 +484,9 @@ export class WorkerRuntimeLanguages {
   public static java = 'Java';
 }
 
-export class FunctionsRuntimeVersions {
-  public static v1 = '~1';
-  public static v2 = '~2';
+export enum FunctionsGenerations {
+  v1 = 'V1',
+  v2 = 'V2',
 }
 
 export class ConsoleConstants {

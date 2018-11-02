@@ -18,6 +18,7 @@ import { FunctionAppService } from 'app/shared/services/function-app.service';
 import { NavigableComponent } from '../shared/components/navigable-component';
 import { EmbeddedService } from 'app/shared/services/embedded.service';
 import { ErrorEvent } from 'app/shared/models/error-event';
+import { FunctionsGenerations } from 'app/shared/models/constants';
 
 @Component({
   selector: 'functions-list',
@@ -140,7 +141,7 @@ export class FunctionsListComponent extends NavigableComponent implements OnDest
       : this._portalService.logAction('function-list', 'enable');
 
     const observable =
-      this.runtimeVersion === 'V2'
+      this.runtimeVersion === FunctionsGenerations.v2
         ? this._functionAppService.updateDisabledAppSettings(this.context, [item.functionInfo])
         : this._functionAppService.updateFunction(this.context, item.functionInfo);
 

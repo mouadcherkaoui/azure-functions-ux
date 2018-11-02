@@ -16,7 +16,7 @@ import { SlotNameValidator } from '../shared/validators/slotNameValidator';
 import { errorIds } from '../shared/models/error-ids';
 import { AuthzService } from '../shared/services/authz.service';
 import { FunctionAppService } from 'app/shared/services/function-app.service';
-import { Constants } from 'app/shared/models/constants';
+import { Constants, FunctionsGenerations } from 'app/shared/models/constants';
 import { NavigableComponent, ExtendedTreeViewInfo } from '../shared/components/navigable-component';
 
 @Component({
@@ -93,7 +93,7 @@ export class SlotNewComponent extends NavigableComponent {
         this.hasCreatePermissions = writePermission && !readOnlyLock;
 
         this.slotOptinEnabled =
-          this.runtimeVersion === 'V2' ||
+          this.runtimeVersion === FunctionsGenerations.v2 ||
           this._slotsList.length > 0 ||
           (as.isSuccessful && as.result.properties[Constants.slotsSecretStorageSettingsName] === Constants.slotsSecretStorageSettingsValue);
 

@@ -1,46 +1,46 @@
 import { GlobalStateService } from './global-state.service';
 import { Host } from './../models/host';
-import { HttpMethods, HttpConstants, LogCategories, ContainerConstants } from './../models/constants';
+import { HttpMethods, HttpConstants, LogCategories, ContainerConstants, FunctionsGenerations } from './../models/constants';
 import { UserService } from './user.service';
 import { HostingEnvironment } from './../models/arm/hosting-environment';
 import { FunctionAppContext } from './../function-app-context';
-import { CacheService } from 'app/shared/services/cache.service';
+import { CacheService } from './../../shared/services/cache.service';
 import { Injectable, Injector } from '@angular/core';
 import { Headers, Response, ResponseType, ResponseContentType } from '@angular/http';
-import { FunctionInfo } from 'app/shared/models/function-info';
+import { FunctionInfo } from './../models/function-info';
 import { HttpResult } from './../models/http-result';
-import { ArmObj } from 'app/shared/models/arm/arm-obj';
-import { FunctionsVersionInfoHelper } from 'app/shared/models/functions-version-info';
-import { Constants } from 'app/shared/models/constants';
-import { ArmUtil } from 'app/shared/Utilities/arm-utils';
+import { ArmObj } from './../models/arm/arm-obj';
+import { FunctionsVersionInfoHelper } from './../models/functions-version-info';
+import { Constants } from './../models/constants';
+import { ArmUtil } from './../../shared/Utilities/arm-utils';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/zip';
-import { ApiProxy } from 'app/shared/models/api-proxy';
+import { ApiProxy } from './../models/api-proxy';
 import * as jsonschema from 'jsonschema';
-import { VfsObject } from 'app/shared/models/vfs-object';
-import { FunctionTemplate } from 'app/shared/models/function-template';
-import { HttpRunModel, Param } from 'app/shared/models/http-run';
-import { FunctionKeys, FunctionKey } from 'app/shared/models/function-key';
-import { BindingConfig, RuntimeExtension } from 'app/shared/models/binding';
-import { HostStatus } from 'app/shared/models/host-status';
-import { SiteConfig } from 'app/shared/models/arm/site-config';
-import { FunctionAppEditMode } from 'app/shared/models/function-app-edit-mode';
-import { Site } from 'app/shared/models/arm/site';
-import { AuthSettings } from 'app/shared/models/auth-settings';
-import { RunFunctionResult } from 'app/shared/models/run-function-result';
-import { PortalResources } from 'app/shared/models/portal-resources';
-import { ConditionalHttpClient } from 'app/shared/conditional-http-client';
+import { VfsObject } from './../models/vfs-object';
+import { FunctionTemplate } from './../models/function-template';
+import { HttpRunModel, Param } from './../models/http-run';
+import { FunctionKeys, FunctionKey } from './../models/function-key';
+import { BindingConfig, RuntimeExtension } from './../models/binding';
+import { HostStatus } from './../models/host-status';
+import { SiteConfig } from './../models/arm/site-config';
+import { FunctionAppEditMode } from './../models/function-app-edit-mode';
+import { Site } from './../models/arm/site';
+import { AuthSettings } from './../models/auth-settings';
+import { RunFunctionResult } from './../models/run-function-result';
+import { PortalResources } from './../models/portal-resources';
+import { ConditionalHttpClient } from './../../shared/conditional-http-client';
 import { TranslateService } from '@ngx-translate/core';
-import { errorIds } from 'app/shared/models/error-ids';
+import { errorIds } from './../models/error-ids';
 import { LogService } from './log.service';
-import { PortalService } from 'app/shared/services/portal.service';
+import { PortalService } from './../../shared/services/portal.service';
 import { ExtensionInstallStatus } from '../models/extension-install-status';
 import { Templates } from './../../function/embedded/temp-templates';
 import { SiteService } from './site.service';
 import { ExtensionJobsStatus } from '../models/extension-jobs-status';
-import { ExtensionInfo, ExtensionsJson } from 'app/shared/models/extension-info';
-import { Version } from 'app/shared/Utilities/version';
-import { ApplicationSettings } from 'app/shared/models/arm/application-settings';
+import { ExtensionInfo, ExtensionsJson } from './../models/extension-info';
+import { Version } from './../../shared/Utilities/version';
+import { ApplicationSettings } from './../models/arm/application-settings';
 import { ArmSiteDescriptor } from '../resourceDescriptors';
 
 type Result<T> = Observable<HttpResult<T>>;
@@ -120,8 +120,8 @@ export class FunctionAppService {
         })
       ).map(result => {
         // For runtime 2.0 we use settings for disabling functions
-        const appSettings = result.appSettings as ArmObj<{ [key: string]: string }>;
-        if (FunctionsVersionInfoHelper.getFunctionGeneration(appSettings.properties[Constants.runtimeVersionAppSettingName]) === 'V2') {
+        const appSettings = (result.appSettings as ArmObj<ApplicationSettings>).properties;
+        if (FunctionsVersionInfoHelper.hasFunctionGenerationSet(appSettings, FunctionsGenerations.v2)) {
           const disabledSetting = appSettings.properties[`AzureWebJobs.${result.function.name}.Disabled`];
           result.function.config.disabled = disabledSetting && disabledSetting.toLocaleLowerCase() === 'true';
         }
@@ -138,8 +138,8 @@ export class FunctionAppService {
         (functions, appSettings) => ({ functions: functions.json() as FunctionInfo[], appSettings: appSettings.json() })
       ).map(result => {
         // For runtime 2.0 we use settings for disabling functions
-        const appSettings = result.appSettings as ArmObj<{ [key: string]: string }>;
-        if (FunctionsVersionInfoHelper.getFunctionGeneration(appSettings.properties[Constants.runtimeVersionAppSettingName]) === 'V2') {
+        const appSettings = (result.appSettings as ArmObj<ApplicationSettings>).properties;
+        if (FunctionsVersionInfoHelper.hasFunctionGenerationSet(appSettings, FunctionsGenerations.v2)) {
           result.functions.forEach(f => {
             const disabledSetting = appSettings.properties[`AzureWebJobs.${f.name}.Disabled`];
 
@@ -255,14 +255,18 @@ export class FunctionAppService {
     );
   }
 
-  getRuntimeGeneration(context: FunctionAppContext): Observable<string> {
+  isRuntimeGeneration(context: FunctionAppContext, functionGeneration: FunctionsGenerations): Observable<boolean> {
+    return this.getRuntimeGeneration(context).map(g => g === functionGeneration);
+  }
+
+  getRuntimeGeneration(context: FunctionAppContext): Observable<FunctionsGenerations> {
     return this.getExtensionVersionFromAppSettings(context).map(v => FunctionsVersionInfoHelper.getFunctionGeneration(v));
   }
 
-  private getExtensionVersionFromAppSettings(context: FunctionAppContext) {
+  private getExtensionVersionFromAppSettings(context: FunctionAppContext): Observable<string> {
     return this._cacheService.postArm(`${context.site.id}/config/appsettings/list`).map(r => {
       const appSettingsArm: ArmObj<any> = r.json();
-      return appSettingsArm.properties[Constants.runtimeVersionAppSettingName];
+      return FunctionsVersionInfoHelper.extractFunctionVersion(appSettingsArm.properties);
     });
   }
 
@@ -869,7 +873,7 @@ export class FunctionAppService {
         (a, b, s, f) => ({ sourceControlEnabled: a, appSettingsResponse: b, hasSlots: s, functions: f })
       )
         .map(result => {
-          const appSettings: ArmObj<{ [key: string]: string }> = result.appSettingsResponse.isSuccessful
+          const appSettings: ArmObj<ApplicationSettings> = result.appSettingsResponse.isSuccessful
             ? result.appSettingsResponse.result
             : null;
 
@@ -1147,7 +1151,7 @@ export class FunctionAppService {
     return Observable.zip(this.getSystemKey(context), this.getRuntimeGeneration(context)).map(tuple => {
       if (tuple[0].isSuccessful) {
         const generation = tuple[1];
-        const eventGridName = generation === 'V1' ? Constants.eventGridName_v1 : Constants.eventGridName_v2;
+        const eventGridName = generation === FunctionsGenerations.v1 ? Constants.eventGridName_v1 : Constants.eventGridName_v2;
         const key = tuple[0].result.keys.find(k => k.name === eventGridName);
         return {
           isSuccessful: true,
