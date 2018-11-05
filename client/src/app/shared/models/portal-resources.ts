@@ -1435,4 +1435,6 @@ export class PortalResources {
   public static savingCredentialsFail = 'savingCredentialsFail';
   public static savingCredentialsSucccess = 'savingCredentialsSucccess';
   public static containerPrivateRegistryDescription = 'containerPrivateRegistryDescription';
+  public static scaleOut = 'scaleOut';
+  public static scaleOutDescription = 'scaleOutDescription';
 }

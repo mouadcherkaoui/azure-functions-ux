@@ -1,6 +1,6 @@
-import { SiteService } from 'app/shared/services/site.service';
+import { SiteService } from '../../shared/services/site.service';
 import { ScenarioService } from './../../shared/services/scenario/scenario.service';
-import { ScenarioIds, SiteTabIds } from './../../shared/models/constants';
+import { ScenarioIds, SiteTabIds, ARMApiVersions } from './../../shared/models/constants';
 import { Component, Input, OnDestroy, Injector } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
@@ -22,9 +22,11 @@ import { PortalService } from '../../shared/services/portal.service';
 import { Site } from '../../shared/models/arm/site';
 import { ArmObj } from '../../shared/models/arm/arm-obj';
 import { ArmSiteDescriptor } from '../../shared/resourceDescriptors';
-import { Url } from 'app/shared/Utilities/url';
+import { Url } from '../../shared/Utilities/url';
 import { FeatureComponent } from 'app/shared/components/feature-component';
 import { ArmUtil } from '../../shared/Utilities/arm-utils';
+import { OpenBladeInfo } from '../../shared/models/portal';
+import { Tier } from '../../shared/models/serverFarmSku';
 
 @Component({
   selector: 'site-manage',
@@ -261,6 +263,21 @@ export class SiteManageComponent extends FeatureComponent<TreeViewInfo<SiteData>
         SiteTabIds.applicationSettings,
         this._broadcastService
       ),
+
+      // new BladeFeature(
+      //   this._translateService.instant(PortalResources.tab_applicationSettings),
+      //   this._translateService.instant(PortalResources.tab_applicationSettings),
+      //   this._translateService.instant(PortalResources.feature_applicationSettingsInfo),
+      //   'image/application-settings.svg',
+      //   {
+      //     detailBlade: 'SiteConfigSettingsFrameBlade',
+      //     detailBladeInputs: {
+      //       id: this._descriptor.resourceId,
+      //     },
+      //     openAsContextBlade: true,
+      //   },
+      //   this._portalService
+      // ),
 
       new BladeFeature(
         this._translateService.instant(PortalResources.feature_propertiesName),
@@ -544,6 +561,17 @@ export class SiteManageComponent extends FeatureComponent<TreeViewInfo<SiteData>
         this._hasPlanWritePermissionStream,
         this._scenarioService.checkScenario(ScenarioIds.addScaleUp, { site: site })
       ),
+
+      new DisableableBladeFeature(
+        this._translateService.instant(PortalResources.scaleOut),
+        this._translateService.instant(PortalResources.appServicePlan) + ' ' + this._translateService.instant(PortalResources.scale),
+        this._translateService.instant(PortalResources.scaleOutDescription),
+        'image/scale-out.svg',
+        this._getScaleOutBladeInfo(site),
+        this._portalService,
+        this._hasPlanReadPermissionStream,
+        this._scenarioService.checkScenario(ScenarioIds.addScaleOut, { site: site })
+      ),
     ];
 
     if (this._scenarioService.checkScenario(ScenarioIds.addSiteQuotas, { site: site }).status !== 'disabled') {
@@ -722,6 +750,34 @@ export class SiteManageComponent extends FeatureComponent<TreeViewInfo<SiteData>
       new FeatureGroup(this._translateService.instant(PortalResources.appServicePlan), appServicePlanFeatures.filter(f => !!f)),
       new FeatureGroup(this._translateService.instant(PortalResources.feature_resourceManagement), resourceManagementFeatures),
     ];
+  }
+
+  private _getScaleOutBladeInfo(site: ArmObj<Site>): OpenBladeInfo {
+    const isElastic = true || site.properties.sku === Tier.elasticPremium || site.properties.sku === Tier.elasticIsolated;
+    if (isElastic) {
+      return {
+        detailBlade: 'ElasticScaleOut',
+        detailBladeInputs: {
+          siteUri: site.id,
+          planUri: site.properties.serverFarmId,
+          options: {
+            hideIcon: true,
+          },
+        },
+        openAsContextBlade: true,
+      };
+    }
+
+    return {
+      detailBlade: 'AutoScaleSettingsBlade',
+      detailBladeInputs: {
+        WebHostingPlanId: site.properties.serverFarmId,
+        resourceId: site.properties.serverFarmId,
+        apiVersion: ARMApiVersions.websiteApiVersion,
+        options: null,
+      },
+      extension: 'Microsoft_Azure_Monitoring',
+    };
   }
 
   private _getConsoleName(site: ArmObj<Site>): string {

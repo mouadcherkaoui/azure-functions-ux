@@ -4450,4 +4450,10 @@ Set to "External URL" to use an API definition that is hosted elsewhere.</value>
   <data name="containerPrivateRegistryDescription" xml:space="preserve">
     <value>Use an image from any private registry, inclduing Azure Container Registry.</value>
   </data>
+  <data name="scaleOut" xml:space="preserve">
+    <value>Scale out</value>
+  </data>
+  <data name="scaleOutDescription" xml:space="preserve">
+    <value>This is a description for Scale out</value>
+  </data>
 </root>

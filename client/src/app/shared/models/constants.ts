@@ -285,6 +285,7 @@ export class ScenarioIds {
   public static readonly externalSource = 'externalSource';
   public static readonly ftpSource = 'ftpSource';
   public static readonly canScaleForSlots = 'canScaleForSlots';
+  public static readonly addScaleOut = 'addScaleOut';
 }
 
 export class NationalCloudArmUris {
