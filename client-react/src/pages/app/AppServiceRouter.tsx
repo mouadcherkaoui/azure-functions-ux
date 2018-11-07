@@ -16,6 +16,10 @@ const AppSettingsLoadable: any = Loadable({
   loader: () => import('./app-settings/AppSettings'),
   loading: LoadingComponent,
 });
+const LogStreamLoadable: any = Loadable({
+  loader: () => import('./log-stream/LogStream'),
+  loading: LoadingComponent,
+});
 
 export class AppServiceRouter extends React.Component<RouteComponentProps<AppSeriviceRouterProps>, any> {
   public componentWillMount() {
@@ -32,6 +36,7 @@ export class AppServiceRouter extends React.Component<RouteComponentProps<AppSer
       <main>
         <Router>
           <AppSettingsLoadable path="/settings" />
+          <LogStreamLoadable path="/log-stream" />
         </Router>
       </main>
     );
