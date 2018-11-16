@@ -1,7 +1,10 @@
 doctype html
-html(lang="en")
-    head
-        title="Azure Functions"
-        include _base/head.pug
-    body(style='background-color: inherit')
-        include _base/body.pug
+if config.reactApp
+    include react_azure/index.pug
+else 
+    html(lang="en")
+        head
+            title="Azure Functions"
+            include _base/head.pug
+        body(style='background-color: inherit')
+            include _base/body.pug

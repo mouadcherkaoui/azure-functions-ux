@@ -74,6 +74,7 @@ const redirectToAcom = (req: express.Request, res: express.Response, next: NextF
 const renderIndex = (req: express.Request, res: express.Response) => {
   staticConfig.config.clientOptimzationsOff =
     req.query['appsvc.clientoptimizations'] && req.query['appsvc.clientoptimizations'] === 'false';
+  staticConfig.config.reactApp = req.query['appsvc.reactapp'] && req.query['appsvc.reactapp'] === 'true';
   res.render('index', staticConfig);
 };
 app.get('/', redirectToAcom, renderIndex);

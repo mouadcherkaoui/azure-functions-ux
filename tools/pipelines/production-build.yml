@@ -1,0 +1,152 @@
+resources:
+  - repo: self
+queue:
+  name: Hosted
+  demands:
+    - msbuild
+    - node.js
+
+steps:
+  - task: roshkovski.guid-generator.guid-generator.guid-generator@1
+    displayName: GenerateHashSalt
+    inputs:
+      VariableName: HashSalt
+
+  - task: geeklearningio.gl-vsts-tasks-yarn.yarn-installer-task.YarnInstaller@2
+    displayName: 'Use Yarn 1.x'
+
+  - task: KirKone.fileoperations.rename.rename@0
+    displayName: 'rename: .env.example to .env'
+    inputs:
+      SourceFile: server/.env.example
+
+      NewName: .env
+
+    continueOnError: true
+
+  - task: qetza.replacetokens.replacetokens-task.replacetokens@2
+    displayName: 'Replace tokens in .env.example'
+    inputs:
+      rootDirectory: server
+
+      targetFiles: |
+        .env
+        **/server.ts
+        package.json
+
+      keepToken: true
+
+    continueOnError: true
+
+  - task: geeklearningio.gl-vsts-tasks-yarn.yarn-task.Yarn@2
+    displayName: 'Yarn install'
+    inputs:
+      ProjectDirectory: server
+
+      Arguments: install
+
+  - task: Gulp@0
+    displayName: 'gulp build-production'
+    inputs:
+      gulpFile: server/gulpfile.js
+
+      targets: 'build-production'
+
+      workingDirectory: server
+
+  - task: bool.compile-type-script.compile-type-script-task.compile-type-script@1
+    displayName: 'Compile TypeScript'
+    inputs:
+      projectPath: server
+
+  - task: CopyFiles@2
+    displayName: 'Copy Files to: $(Build.ArtifactStagingDirectory)'
+    inputs:
+      SourceFolder: server/build
+
+      TargetFolder: '$(Build.ArtifactStagingDirectory)'
+
+  - task: geeklearningio.gl-vsts-tasks-yarn.yarn-task.Yarn@2
+    displayName: 'Yarn install'
+    inputs:
+      ProjectDirectory: client
+
+      Arguments: install
+
+  - task: CmdLine@1
+    displayName: 'Run $(Build.SourcesDirectory)\client\node_modules\.bin\ng'
+    inputs:
+      filename: '$(Build.SourcesDirectory)\client\node_modules\.bin\ng'
+
+      arguments: 'build --progress false --prod --environment=prod --output-path="$(Build.ArtifactStagingDirectory)\public\ng-min"'
+
+      workingFolder: client
+
+  - task: CmdLine@1
+    displayName: 'Run $(Build.SourcesDirectory)\client\node_modules\.bin\ng'
+    inputs:
+      filename: '$(Build.SourcesDirectory)\client\node_modules\.bin\ng'
+
+      arguments: 'build --progress false --output-path="$(Build.ArtifactStagingDirectory)\public\ng-full"'
+
+      workingFolder: client
+
+  - task: CopyFiles@2
+    displayName: 'Copy Files to: $(Build.ArtifactStagingDirectory)'
+    inputs:
+      SourceFolder: client/src/assets/googlecdaac16e0f037ee3.html
+
+      TargetFolder: '$(Build.ArtifactStagingDirectory)'
+
+  - task: CopyFiles@2
+    displayName: 'Copy Files to: $(Build.ArtifactStagingDirectory)\schemas'
+    inputs:
+      SourceFolder: client/src/assets/schemas
+
+      TargetFolder: '$(Build.ArtifactStagingDirectory)\schemas'
+
+  - script: |
+      cd client-react
+      yarn install
+      yarn build
+    displayName: 'install yarn'
+
+  - task: CopyFiles@2
+    displayName: 'Copy Files to: $(Build.ArtifactStagingDirectory)\schemas'
+    inputs:
+      SourceFolder: client-react/build
+      TargetFolder: '$(Build.ArtifactStagingDirectory)\public\build'
+
+  - task: geeklearningio.gl-vsts-tasks-yarn.yarn-task.Yarn@2
+    displayName: 'Yarn install'
+    inputs:
+      ProjectDirectory: '$(Build.ArtifactStagingDirectory)'
+      Arguments: install
+
+  - task: Gulp@0
+    displayName: 'gulp replace-tokens'
+    inputs:
+      gulpFile: '$(Build.ArtifactStagingDirectory)/gulpfile.js'
+
+      targets: 'replace-tokens'
+
+  - task: DeleteFiles@1
+    displayName: 'Delete files dev node_modules'
+    inputs:
+      SourceFolder: '$(Build.ArtifactStagingDirectory)'
+
+      Contents: 'node_modules\'
+
+  - task: geeklearningio.gl-vsts-tasks-yarn.yarn-task.Yarn@2
+    displayName: 'Yarn install production'
+    inputs:
+      ProjectDirectory: '$(Build.ArtifactStagingDirectory)'
+
+      Arguments: install
+
+      ProductionMode: true
+
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish Artifact: dest'
+    inputs:
+      ArtifactName: dest

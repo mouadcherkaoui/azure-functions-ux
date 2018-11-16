@@ -69,6 +69,23 @@ gulp.task('replace-tokens-for-minimized-angular', cb => {
     config.scripts = index.match(/scripts.*?\.bundle.js/)[0];
     config.main = index.match(/main.*?\.bundle.js/)[0];
     config.styles = index.match(/styles.*?\.bundle.css/)[0];
+
+    return gulp
+      .src('src/**/*.pug')
+      .pipe(replace({ global: config }))
+      .pipe(gulp.dest('./src/'));
+  }
+  cb();
+});
+
+gulp.task('replace-tokens-for-minimized-react', cb => {
+  const reactPath = path.join(__dirname, 'public');
+  const minFolderExists = fs.existsSync(reactPath);
+  if (minFolderExists) {
+    const index = fs.readFileSync(path.join(reactPath, 'index.html'), 'utf8');
+    const config = {};
+    config.main_react = index.match(/main.*?\.js/)[0];
+
     return gulp
       .src('src/**/*.pug')
       .pipe(replace({ global: config }))
@@ -86,7 +103,7 @@ gulp.task('replace-tokens-for-configuration', () => {
 });
 
 gulp.task('replace-tokens', function() {
-  return runSequence(['replace-tokens-for-configuration', 'replace-tokens-for-minimized-angular']);
+  return runSequence(['replace-tokens-for-configuration', 'replace-tokens-for-minimized-angular', 'replace-tokens-for-minimized-react']);
 });
 /********
  *   Bundle Up production server views

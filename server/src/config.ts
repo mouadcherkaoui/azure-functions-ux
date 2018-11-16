@@ -11,6 +11,7 @@ interface StaticConfig {
     isAzure: boolean;
     isOnPrem: boolean;
     clientOptimzationsOff: boolean;
+    reactApp: boolean;
     functionsVersionInfo: {
       runtimeStable: Array<RuntimeVersion>;
       runtimeDefault: RuntimeVersion;
@@ -31,6 +32,7 @@ export const staticConfig: StaticConfig = {
     isAzure: !!process.env.WEBSITE_SITE_NAME,
     isOnPrem: false,
     clientOptimzationsOff: false,
+    reactApp: false,
     functionsVersionInfo: {
       runtimeStable: ['~1', 'beta', '~2', 'latest'],
       runtimeDefault: '~1',
